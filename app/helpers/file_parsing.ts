@@ -1,0 +1,496 @@
+/**
+ * Course File Parsers
+ * -------------------
+ * Helper functions to parse Excel, CSV, JSON, and PDF files
+ * into a unified CourseInsert format for ingestion into Supabase.
+ *
+ * Required packages (install in your Next.js project):
+ *   npm install xlsx papaparse pdfjs-dist
+ *   npm install --save-dev @types/papaparse
+ *
+ * Usage:
+ *   import { parseFile } from '@/lib/parsers'
+ *   const courses = await parseFile(file)
+ */
+
+import { CourseInsert } from "../types/course";
+
+// =====================================================================
+// UNIFIED COURSE FORMAT
+// =====================================================================
+
+
+/** Keys that must always exist on a CourseInsert (even if empty string) */
+const REQUIRED_KEYS: (keyof CourseInsert)[] = [
+  "programme",
+  "degree_type",
+  "study_option",
+  "title",
+  "code",
+  "id",
+  "name",
+  "credits",
+  "timing",
+  "learning_outcomes",
+  "content",
+  "instructor",
+  "description",
+  "prerequisites",
+  "assessment",
+  "url",
+];
+
+// =====================================================================
+// NORMALISATION HELPERS
+// =====================================================================
+
+/**
+ * Return a safe string — converts null / undefined / non-strings to "".
+ */
+function safeStr(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
+  return "";
+}
+
+/**
+ * Map a raw key from a parsed file to its canonical CourseInsert key.
+ * Handles common naming variations found in spreadsheets / JSON exports.
+ *
+ * Returns null if the key is not recognised.
+ */
+function mapKey(raw: string): keyof CourseInsert | null {
+  const k = raw.toLowerCase().replace(/[\s\-]/g, "_");
+
+  const mapping: Record<string, keyof CourseInsert> = {
+    programme: "programme",
+    program: "programme",
+    degree_type: "degree_type",
+    degreetype: "degree_type",
+    degree: "degree_type",
+    study_option: "study_option",
+    studyoption: "study_option",
+    option: "study_option",
+    track: "study_option",
+    title: "title",
+    course_title: "title",
+    coursetitle: "title",
+    code: "code",
+    course_code: "code",
+    coursecode: "code",
+    id: "id",
+    course_id: "id",
+    courseid: "id",
+    name: "name",
+    course_name: "name",
+    coursename: "name",
+    course_credits: "credits",
+    credits: 'credits',
+    learning_outcomes: "learning_outcomes",
+    learningoutcomes: "learning_outcomes",
+    learning_outcome: "learning_outcomes",
+    outcomes: "learning_outcomes",
+    objectives: "learning_outcomes",
+    content: "content",
+    course_content: "content",
+    topics: "content",
+    syllabus: "content",
+    instructor: "instructor",
+    teacher: "instructor",
+    lecturer: "instructor",
+    person_in_charge: "instructor",
+    responsible_person: "instructor",
+    description: "description",
+    course_description: "description",
+    summary: "description",
+    prerequisites: "prerequisites",
+    prerequisite: "prerequisites",
+    pre_requisites: "prerequisites",
+    required_courses: "prerequisites",
+    assessment: "assessment",
+    assessment_criteria: "assessment",
+    grading: "assessment",
+    evaluation: "assessment",
+    url: "url",
+    link: "url",
+    course_url: "url",
+    webpage: "url",
+  };
+
+  return mapping[k] ?? null;
+}
+
+/**
+ * Parse timing columns (e.g. "1st_YEAR_1P", "2nd_YEAR_3P") from a raw row.
+ * Accepts values: 1, "1", true, "yes", "x", "✓" → 1; everything else → 0.
+ */
+function parseTimingFromRow(row: Record<string, unknown>): Record<string, number> {
+  const timing: Record<string, number> = {};
+  const timingPattern = /^(1st|2nd|3rd)_year_\dp$/i;
+
+  for (const [key, value] of Object.entries(row)) {
+    if (!timingPattern.test(key)) continue;
+
+    let active = 0;
+    if (value === 1 || value === true) {
+      active = 1;
+    } else if (typeof value === "string") {
+      active = ["1", "true", "yes", "x", "✓", "✔"].includes(
+        value.toLowerCase().trim()
+      )
+        ? 1
+        : 0;
+    }
+    timing[key.toUpperCase()] = active;
+  }
+
+  return timing;
+}
+
+/**
+ * Ensure every required key exists on the record.
+ * Missing string fields default to ""; missing `timing` defaults to {}.
+ */
+function normalise(partial: Partial<CourseInsert>): CourseInsert {
+  const record = { ...partial } as CourseInsert;
+
+  for (const key of REQUIRED_KEYS) {
+    if (record[key] === undefined || record[key] === null) {
+      (record as unknown as Record<string, unknown>)[key] =
+        key === "timing" ? {} : "";
+    }
+  }
+
+  // Guarantee `timing` is always an object
+  if (typeof record.timing !== "object" || Array.isArray(record.timing)) {
+    record.timing = {};
+  }
+
+  return record;
+}
+
+/**
+ * Convert a raw key-value row (from any parser) into a CourseInsert.
+ */
+function rowToCourse(row: Record<string, unknown>): CourseInsert {
+  const partial: Partial<CourseInsert> = {
+    timing: parseTimingFromRow(row),
+  };
+
+  for (const [rawKey, value] of Object.entries(row)) {
+    const canonical = mapKey(rawKey);
+    if (canonical && canonical !== "timing") {
+      (partial as Record<string, unknown>)[canonical] = safeStr(value);
+    }
+  }
+
+  return normalise(partial);
+}
+
+// =====================================================================
+// EXCEL PARSER (.xlsx / .xls)
+// =====================================================================
+
+/**
+ * Parse an Excel file (all sheets) into CourseInsert[].
+ *
+ * Uses the `xlsx` (SheetJS) library — install with:
+ *   npm install xlsx
+ *
+ * Each row in every sheet is mapped to a CourseInsert.
+ * Rows that have no `name` AND no `code` are silently skipped.
+ *
+ * @param file - The File object from an <input type="file"> element.
+ * @returns    Array of normalised CourseInsert objects.
+ */
+export async function parseExcel(file: File): Promise<CourseInsert[]> {
+  const { read, utils } = await import("xlsx");
+
+  const buffer = await file.arrayBuffer();
+  const workbook = read(buffer, { type: "array" });
+
+  const courses: CourseInsert[] = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+
+    // header: 1 → first row becomes column headers
+    const rows: Record<string, unknown>[] = utils.sheet_to_json(sheet, {
+      defval: "",
+      raw: false, // Converts dates / numbers to strings consistently
+    });
+
+    for (const row of rows) {
+      const course = rowToCourse(row);
+      // Skip completely empty rows
+      if (!course.name && !course.code && !course.title) continue;
+      courses.push(course);
+    }
+  }
+
+  return courses;
+}
+
+// =====================================================================
+// CSV PARSER (.csv)
+// =====================================================================
+
+/**
+ * Parse a CSV file into CourseInsert[].
+ *
+ * Uses `papaparse` — install with:
+ *   npm install papaparse
+ *   npm install --save-dev @types/papaparse
+ *
+ * Assumes the first row is a header row.
+ * Empty rows are skipped automatically by PapaParse (skipEmptyLines).
+ *
+ * @param file - The File object from an <input type="file"> element.
+ * @returns    Array of normalised CourseInsert objects.
+ */
+export async function parseCsv(file: File): Promise<CourseInsert[]> {
+  const Papa = (await import("papaparse")).default;
+
+  return new Promise((resolve, reject) => {
+    Papa.parse<Record<string, unknown>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: false, // Keep everything as strings; we normalise ourselves
+      complete: (result) => {
+        if (result.errors.length > 0) {
+          console.warn("[parseCsv] Warnings:", result.errors);
+        }
+
+        const courses = result.data
+          .map(rowToCourse)
+          .filter((c) => c.name || c.code || c.title);
+
+        resolve(courses);
+      },
+      error: (error: Error) => reject(error),
+    });
+  });
+}
+
+// =====================================================================
+// JSON PARSER (.json)
+// =====================================================================
+
+/**
+ * Parse a JSON file into CourseInsert[].
+ *
+ * Accepted JSON shapes:
+ *   - Array of objects:  [ { code: "...", name: "..." }, ... ]
+ *   - Object with a courses key:  { "courses": [ ... ] }
+ *   - Object with a data key:     { "data": [ ... ] }
+ *
+ * Any other shape returns an empty array and logs a warning.
+ *
+ * @param file - The File object from an <input type="file"> element.
+ * @returns    Array of normalised CourseInsert objects.
+ */
+export async function parseJson(file: File): Promise<CourseInsert[]> {
+  const text = await file.text();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Invalid JSON file — could not parse.");
+  }
+
+  let rows: Record<string, unknown>[];
+
+  if (Array.isArray(parsed)) {
+    rows = parsed as Record<string, unknown>[];
+  } else if (parsed !== null && typeof parsed === "object") {
+    const obj = parsed as Record<string, unknown>;
+
+    if (Array.isArray(obj.courses)) {
+      rows = obj.courses as Record<string, unknown>[];
+    } else if (Array.isArray(obj.data)) {
+      rows = obj.data as Record<string, unknown>[];
+    } else {
+      console.warn(
+        "[parseJson] Unrecognised JSON shape — expected an array or { courses: [] } / { data: [] }"
+      );
+      return [];
+    }
+  } else {
+    console.warn("[parseJson] JSON root is not an array or object.");
+    return [];
+  }
+
+  return rows
+    .map(rowToCourse)
+    .filter((c) => c.name || c.code || c.title);
+}
+
+// =====================================================================
+// PDF PARSER (.pdf)
+// =====================================================================
+
+/**
+ * Parse a PDF file into CourseInsert[].
+ *
+ * Strategy:
+ *   1. Extract all text from every page using pdfjs-dist.
+ *   2. Attempt to detect a table by looking for a header row containing
+ *      recognisable column names (code, name, description, …).
+ *   3. If a table is detected, split each subsequent line by 2+ spaces
+ *      (common in text-extracted tables) and map columns to fields.
+ *   4. If no table is detected, return a single "document" CourseInsert
+ *      whose `description` field holds the full extracted text — useful
+ *      when the PDF is a plain syllabus document rather than a table.
+ *
+ * Uses `pdfjs-dist` — install with:
+ *   npm install pdfjs-dist
+ *
+ * NOTE: pdfjs-dist requires its worker to be configured. In Next.js add
+ * this once in your layout or a top-level component:
+ *
+ *   import { GlobalWorkerOptions } from 'pdfjs-dist'
+ *   GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
+ *
+ * And copy the worker to your /public folder:
+ *   cp node_modules/pdfjs-dist/build/pdf.worker.min.js public/
+ *
+ * @param file - The File object from an <input type="file"> element.
+ * @returns    Array of normalised CourseInsert objects.
+ */
+export async function parsePdf(file: File): Promise<CourseInsert[]> {
+  const pdfjsLib = await import("pdfjs-dist");
+
+  const buffer = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({ data: buffer });
+  const pdf = await loadingTask.promise;
+
+  // Extract text from every page
+  const pageTexts: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    pageTexts.push(pageText);
+  }
+
+  const fullText = pageTexts.join("\n");
+  const lines = fullText
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  // Try to detect a header row
+  const headerLineIndex = lines.findIndex((line) => {
+    const lower = line.toLowerCase();
+    return (
+      (lower.includes("code") || lower.includes("name")) &&
+      (lower.includes("description") ||
+        lower.includes("credit") ||
+        lower.includes("outcome") ||
+        lower.includes("programme"))
+    );
+  });
+
+  if (headerLineIndex === -1) {
+    // No table detected — return a single document-level record
+    console.warn(
+      "[parsePdf] No table header detected. Returning full text as a single record."
+    );
+    return [
+      normalise({
+        name: file.name.replace(/\.pdf$/i, ""),
+        title: file.name.replace(/\.pdf$/i, ""),
+        description: fullText,
+        timing: {},
+      }),
+    ];
+  }
+
+  // Parse header columns
+  const headerLine = lines[headerLineIndex];
+  // Split on 2+ consecutive spaces (typical of text-extracted tables)
+  const headers = headerLine.split(/\s{2,}/).map((h) => h.trim());
+
+  const courses: CourseInsert[] = [];
+
+  for (let i = headerLineIndex + 1; i < lines.length; i++) {
+    const cells = lines[i].split(/\s{2,}/).map((c) => c.trim());
+
+    if (cells.length < 2) continue; // Skip lines that look like prose
+
+    const row: Record<string, unknown> = {};
+    headers.forEach((header, idx) => {
+      row[header] = cells[idx] ?? "";
+    });
+
+    const course = rowToCourse(row);
+    if (course.name || course.code) {
+      courses.push(course);
+    }
+  }
+
+  // If parsing yielded nothing, fall back to full-text record
+  if (courses.length === 0) {
+    return [
+      normalise({
+        name: file.name.replace(/\.pdf$/i, ""),
+        title: file.name.replace(/\.pdf$/i, ""),
+        description: fullText,
+        timing: {},
+      }),
+    ];
+  }
+
+  return courses;
+}
+
+// =====================================================================
+// UNIFIED ENTRY POINT
+// =====================================================================
+
+/**
+ * Detect the file type by extension and delegate to the correct parser.
+ *
+ * Supported extensions: .xlsx, .xls, .csv, .json, .pdf
+ *
+ * @param file - The File object from an <input type="file"> element.
+ * @returns    Array of normalised CourseInsert objects.
+ * @throws     Error if the file extension is not supported.
+ *
+ * @example
+ * const input = document.querySelector<HTMLInputElement>('#file-input')!
+ * input.addEventListener('change', async () => {
+ *   const file = input.files?.[0]
+ *   if (!file) return
+ *   const courses = await parseFile(file)
+ *   console.log(courses)
+ * })
+ */
+export async function parseFile(file: File): Promise<CourseInsert[]> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+  switch (ext) {
+    case "xlsx":
+    case "xls":
+      return parseExcel(file);
+
+    case "csv":
+      return parseCsv(file);
+
+    case "json":
+      return parseJson(file);
+
+    case "pdf":
+      return parsePdf(file);
+
+    default:
+      throw new Error(
+        `Unsupported file type ".${ext}". Accepted: .xlsx, .xls, .csv, .json, .pdf`
+      );
+  }
+}
