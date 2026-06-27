@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NavigationBarServer } from "./components/NavigationBarServer";
+import { LoaderProvider } from "./context/LoaderContext";
+import { NotificationProvider } from "./context/Notification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +26,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
+    <LoaderProvider>
+      <NotificationProvider>
+        <html
+          lang="en"
+          className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+        >
+          <body className="flex min-h-screen">
+            <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
+            <main className="flex-1">    {/* flex-1 — tự lấp đầy phần còn lại */}
+              {children}
+            </main>
+          </body>
+        </html>
+      </NotificationProvider>
+    </LoaderProvider>
   );
 }
