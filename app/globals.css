@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #ffffff;
     --foreground: #ededed;
   }
 }
@@ -24,7 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
+.shadow-template {
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
 /* ================================================================
    NAVIGATION SIDEBAR
    Add these classes to your globals.css
@@ -46,7 +48,7 @@ body {
   flex-direction: column;
   width: 220px;
   min-height: 100vh;
-  background-color: #e8f4f8;
+  background-color: #cae7f0;
   padding: 24px 12px;
   gap: 0;
   flex-shrink: 0;
@@ -210,118 +212,514 @@ body {
 
 
 
-/* From Uiverse.io by JohnnyCSilva */ 
-.login-form {
+.login_btn {
+  outline: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  background:#1a5c55;
+  min-width: 200px;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+  box-sizing: border-box;
+  padding: 16px 20px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+
+
+hboard · CSS
+/* ================================================================
+   DASHBOARD PAGE
+   Add these to globals.css
+   Palette consistent with nav-sidebar:
+     page bg   : #F0F7FA
+     card bg   : #FFFFFF
+     border    : #D6EDF5
+     teal      : #7DD8CC  (accent / active)
+     dark teal : #1A5C55
+     text-main : #1A2E35
+     text-muted: #6B9DAA
+   ================================================================ */
+ 
+/* ── Page shell (sits next to the 220px sidebar) ─────────────── */
+.dashboard-page {
+  flex: 1;
+  min-height: 100vh;
+  background-color: #f0f7fa;
+  padding: 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  overflow-y: auto;
+}
+ 
+/* ── Two-column grid ─────────────────────────────────────────── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+ 
+/* ── Card ────────────────────────────────────────────────────── */
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #d6edf5;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0; /* quan trọng — ngăn flex child bị phình ra */
+  overflow: hidden;
+}
+ 
+.dashboard-card-job {
+  position: sticky;
+  top: 32px;
+}
+ 
+/* ── Section title ───────────────────────────────────────────── */
+.dashboard-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a2e35;
+  margin: 0;
+}
+ 
+.dashboard-section-icon {
+  color: #7dd8cc;
+}
+ 
+.dashboard-section-icon-green {
+  color: #2ecc71;
+}
+ 
+/* ── Source pills ────────────────────────────────────────────── */
+.dashboard-source-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+ 
+.dashboard-pill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+ 
+.dashboard-pill-active {
+  background-color: #7dd8cc;
+  border-color: #7dd8cc;
+  color: #1a5c55;
+}
+ 
+.dashboard-pill-inactive {
+  background-color: #f0f7fa;
+  border-color: #d6edf5;
+  color: #6b9daa;
+}
+ 
+.dashboard-pill-inactive:hover {
+  border-color: #7dd8cc;
+  color: #1a5c55;
+}
+ 
+/* ── Course table ────────────────────────────────────────────── */
+.dashboard-table-wrap {
+  width: 100%;
+  max-height: 280px;        /* giới hạn chiều cao — chỉnh số này tùy ý */
+  overflow-x: auto;
+  overflow-y: auto;         /* scroll dọc */
+  border-radius: 10px;
+  border: 1px solid #d6edf5;
+  scrollbar-width: thin;
+  scrollbar-color: #c8e6ee transparent;
+}
+ 
+/* Webkit scrollbar (Chrome, Safari, Edge) */
+.dashboard-table-wrap::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.dashboard-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-table-wrap::-webkit-scrollbar-thumb {
+  background-color: #c8e6ee;
+  border-radius: 999px;
+}
+
+.dashboard-table-wrap::-webkit-scrollbar-thumb:hover {
+  background-color: #7dd8cc;
+}
+
+.dashboard-table-wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ── Table — không để width: 100% gây phình ── */
+.dashboard-table {
+  width: max-content; /* co theo content, không ép full width */
+  min-width: 100%;    /* nhưng tối thiểu phải full wrap */
+  border-collapse: collapse;
+  font-size: 13px;
+}
+ 
+.dashboard-table thead tr {
+  background-color: #f0f7fa;
+}
+ 
+.dashboard-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b9daa;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #d6edf5;
+}
+ 
+.dashboard-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f7fa;
+  color: #1a2e35;
+  vertical-align: top;
+}
+ 
+.dashboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+ 
+.dashboard-table tbody tr:hover td {
+  background-color: #f7fbfd;
+}
+ 
+.dashboard-table-name {
+  font-weight: 600;
+  color: #1a2e35;
+  white-space: nowrap;
+}
+ 
+.dashboard-table-desc {
+  color: #6b9daa;
+  font-style: italic;
+  max-width: 280px;
+}
+ 
+.dashboard-table-empty {
+  font-size: 13px;
+  color: #6b9daa;
+  text-align: center;
+  padding: 16px 0;
+}
+ 
+/* ── Drop zone ───────────────────────────────────────────────── */
+.dashboard-dropzone {
+  border: 2px dashed #c8e6ee;
+  border-radius: 12px;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  background-color: #fafeff;
+}
+ 
+.dashboard-dropzone:hover {
+  border-color: #7dd8cc;
+  background-color: #f0faf9;
+}
+ 
+.dashboard-dropzone-active {
+  border-color: #7dd8cc;
+  background-color: #e8faf8;
+}
+ 
+.dashboard-dropzone-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+ 
+.dashboard-dropzone-icon {
+  font-size: 36px !important;
+  color: #7dd8cc;
+}
+ 
+.dashboard-dropzone-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2e35;
+}
+ 
+.dashboard-dropzone-sub {
+  font-size: 12px;
+  color: #6b9daa;
+}
+ 
+/* ── Example format badges ───────────────────────────────────── */
+.dashboard-examples {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+ 
+.dashboard-examples-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b9daa;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+ 
+.dashboard-example-badge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #d6edf5;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a7a85;
+  background: #ffffff;
+}
+ 
+/* ── Job form ────────────────────────────────────────────────── */
+.dashboard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+ 
+.dashboard-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+ 
+.dashboard-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a7a85;
+  letter-spacing: 0.02em;
+}
+ 
+.dashboard-input {
+  padding: 10px 14px;
+  border: 1.5px solid #d6edf5;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1a2e35;
+  background: #fafeff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+ 
+.dashboard-input:focus {
+  border-color: #7dd8cc;
+}
+ 
+.dashboard-input::placeholder {
+  color: #a8c8d4;
+}
+ 
+.dashboard-textarea {
+  padding: 10px 14px;
+  border: 1.5px solid #d6edf5;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1a2e35;
+  background: #fafeff;
+  outline: none;
+  resize: vertical;
+  line-height: 1.6;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+ 
+.dashboard-textarea:focus {
+  border-color: #7dd8cc;
+}
+ 
+.dashboard-textarea::placeholder {
+  color: #a8c8d4;
+}
+ 
+/* ── Analyze button ──────────────────────────────────────────── */
+.dashboard-analyze-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background-color: #1a2e35;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  letter-spacing: 0.01em;
+}
+ 
+.dashboard-analyze-btn:hover:not(:disabled) {
+  background-color: #1a5c55;
+}
+ 
+.dashboard-analyze-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+ 
+.dashboard-analyze-arrow {
+  font-size: 16px;
+}
+ 
+/* ── Analysis results section ────────────────────────────────── */
+.dashboard-results {
+  gap: 20px;
+}
+ 
+.dashboard-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+ 
+.dashboard-relevance-badge {
+  padding: 4px 12px;
+  background-color: #e8faf8;
+  color: #1a5c55;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #7dd8cc;
+}
+ 
+.dashboard-requirements {
+  background-color: #f0f7fa;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border-left: 3px solid #7dd8cc;
+}
+ 
+.dashboard-requirements-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a7a85;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+ 
+.dashboard-requirements-text {
+  font-size: 13px;
+  color: #1a2e35;
+  line-height: 1.6;
+}
+ 
+/* ── Results grid ────────────────────────────────────────────── */
+.dashboard-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+ 
+.dashboard-result-card {
+  border: 1px solid #d6edf5;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fafeff;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: #ffffff;
-  padding: 30px;
-  width: 450px;
-  border-radius: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  transition: box-shadow 0.2s ease;
 }
-
-::placeholder {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+ 
+.dashboard-result-card:hover {
+  box-shadow: 0 4px 16px rgba(125, 216, 204, 0.18);
 }
-
-.login-form button {
-  align-self: flex-end;
-}
-
-.login-label-container > label {
-  color: #151717;
-  font-weight: 600;
-}
-
-.inputForm {
-  border: 1.5px solid #ecedec;
-  border-radius: 10px;
-  height: 50px;
+ 
+.dashboard-result-header {
   display: flex;
-  align-items: center;
-  padding-left: 10px;
-  transition: 0.2s ease-in-out;
-}
-
-.login-input {
-  margin-left: 10px;
-  border-radius: 10px;
-  border: none;
-  width: 100%;
-  height: 100%;
-}
-
-.login-input:focus {
-  outline: none;
-}
-
-.inputForm:focus-within {
-  border: 1.5px solid #2d79f3;
-}
-
-.login-subinfo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
   justify-content: space-between;
+  align-items: flex-start;
 }
-
-.login-subinfo > div > label {
+ 
+.dashboard-result-score-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b9daa;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+ 
+.dashboard-result-score {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a5c55;
+  line-height: 1;
+}
+ 
+.dashboard-result-name {
   font-size: 14px;
-  color: black;
-  font-weight: 400;
+  font-weight: 700;
+  color: #1a2e35;
+  line-height: 1.3;
 }
-
-.login-span {
-  font-size: 14px;
-  margin-left: 5px;
-  color: #2d79f3;
-  font-weight: 500;
-  cursor: pointer;
+ 
+.dashboard-result-desc {
+  font-size: 12px;
+  color: #6b9daa;
+  line-height: 1.5;
+  flex: 1;
 }
-
-.button-submit {
-  margin: 20px 0 10px 0;
-  background-color: #151717;
-  border: none;
-  color: white;
-  font-size: 15px;
-  font-weight: 500;
-  border-radius: 10px;
-  height: 50px;
-  width: 100%;
-  cursor: pointer;
-}
-
-.login-text {
-  text-align: center;
-  color: black;
-  font-size: 14px;
-  margin: 5px 0;
-}
-
-.btn {
-  margin-top: 10px;
-  width: 100%;
-  height: 50px;
-  border-radius: 10px;
+ 
+.dashboard-result-footer {
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-weight: 500;
-  gap: 10px;
-  border: 1px solid #ededef;
-  background-color: white;
-  cursor: pointer;
-  transition: 0.2s ease-in-out;
+  justify-content: space-between;
+  margin-top: auto;
 }
-
-.btn:hover {
-  border: 1px solid #2d79f3;
-  ;
+ 
+.dashboard-result-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a7a85;
+  background-color: #e8f4f8;
+  padding: 3px 10px;
+  border-radius: 999px;
 }
-
-    
+ 
+.dashboard-result-link {
+  color: #7dd8cc;
+  font-size: 14px !important;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+ 
+.dashboard-result-link:hover {
+  color: #1a5c55;
+}

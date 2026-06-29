@@ -2,15 +2,15 @@
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
-import { createClient } from '../utils/supabase/client';
-import { login, resendVerificationCode } from '../actions/authentication';
+import { signup } from '../actions/authentication';
 import { useLoader } from '../context/LoaderContext';
-import { useRouter } from 'next/navigation';
+import { useNotification } from '../context/Notification';
+import {  SignupForm } from '../types/authentication';
+import { AUTH_ERROR_CODE } from '../types/enum';
+import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import PasswordIcon from '@mui/icons-material/Password';
-import { useNotification } from '../context/Notification';
-import { LoginForm } from '../types/authentication';
-import { AUTH_ERROR_CODE } from '../types/enum';
+import { createClient } from '../utils/supabase/client';
 const Home = () => {
     const { showNotification } = useNotification();
     const supabase = createClient();
@@ -19,9 +19,30 @@ const Home = () => {
         handleSubmit,
         formState: { errors },
         getValues
-    } = useForm<LoginForm>()
+    } = useForm<SignupForm>()
     const { setIsOpenLoader } = useLoader()
-    const router = useRouter()
+
+    const onSubmit = async (signupInfo: SignupForm) => {
+        setIsOpenLoader(true)
+        try {
+            const { error } = await signup(signupInfo, window.location.origin)
+            if (error) {
+                throw new Error(error)
+            }
+        } catch (error) {
+            if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+                if (error.message == AUTH_ERROR_CODE.EXISTED_USER) {
+                    showNotification('User already existed')
+                } else {
+                    showNotification('Fail to sign up')
+                }
+            }
+            else if (error instanceof Error && error.message == 'NEXT_REDIRECT') {
+                showNotification('Sign up successfully, please verify your email')
+            }
+            setIsOpenLoader(false)
+        }
+    }
     const handleLoginWithGithub = async () => {
         const isAcceptedTerm = getValues('isTermAccepted');
         if (isAcceptedTerm) {
@@ -35,44 +56,30 @@ const Home = () => {
             showNotification('Please accept the terms conditions and privacy policy')
         }
     }
-    const onSubmit = async (userInfo: LoginForm) => {
-        setIsOpenLoader(true)
-        try {
-            const { error } = await login(userInfo)
-
-            if (error) {
-                throw new Error(error)
-            }
-
-        } catch (error) {
-
-            if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-                if (error instanceof Error && error.message == AUTH_ERROR_CODE.EMAIL_NOT_CONFIRMED) {
-                    try {
-                        await resendVerificationCode(userInfo.email, window.location.origin)
-                        showNotification('Please verify your email')
-                        router.push(`/sign-up/verify-account?email=${userInfo.email}`)
-                    } catch (error) {
-                        showNotification('Failed to send verification code')
-                    }
-                } else if (error instanceof Error && error.message == AUTH_ERROR_CODE.INVALID_CREDENTIALS) {
-                    showNotification("Invalid credentials")
-                } else {
-                    showNotification('Failed to login')
-                }
-            } else if (error instanceof Error && error.message == 'NEXT_REDIRECT') {
-                showNotification('Login successfully')
-            }
-            setIsOpenLoader(false)
-
-        }
-    }
-
     return (
-        <div className="p-5 flex flex-col justify-center items-center min-h-screen">
+        <div className='min-h-screen w-full flex justify-center items-center'>
             <form className="flex flex-col gap-2 rounded-[50px] bg-[#e0e0e0] 
                                shadow-template
                                flex flex-col duration-300 p-8 w-[450px] rounded-lg font-roboto-mono" onSubmit={handleSubmit(onSubmit)}>
+               <div className="flex flex-col">
+                    <label className="text-[#151717] mb-1 font-semibold">Full Name</label>
+                    <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
+                        <PersonIcon />
+                        <input
+                            type="text"
+                            placeholder="Enter your Full Name"
+                            className="flex-1 h-full border-none outline-none px-2 placeholder-gray-400  text-black "
+                            {...register("fullName", {
+                                required: "Full name is required",
+                            })}
+                        />
+                    </div>
+                    {errors.fullName && (
+                        <p className="text-red-500 text-sm mt-1">
+                            {errors.fullName.message}
+                        </p>
+                    )}
+                </div>
                 <div className="flex flex-col">
                     <label className="text-[#151717] mb-1 font-semibold">Email</label>
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
@@ -97,7 +104,7 @@ const Home = () => {
                     )}
                 </div>
 
-                <div className="flex flex-col mt-4">
+                <div className="flex flex-col ">
                     <label className="text-[#151717] font-semibold mb-1">Password</label>
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
                         <PasswordIcon />
@@ -120,6 +127,7 @@ const Home = () => {
                         </p>
                     )}
                 </div>
+
                 <div className="flex items-center justify-between mt-4">
                     <label className="flex items-center gap-2 text-sm font-normal text-black">
                         <input type="checkbox" />
@@ -127,7 +135,6 @@ const Home = () => {
                     </label>
                     <Link href={`/forget-password`} className="text-blue-600 font-medium text-sm cursor-pointer">Forgot password?</Link>
                 </div>
-
 
                 <div className="flex flex-col mt-4">
                     <div className="flex items-start space-x-2">
@@ -157,11 +164,12 @@ const Home = () => {
                         </p>
                     )}
                 </div>
-                 <button className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Sign In<i className="animation"></i>
+
+                <button className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Sign Up<i className="animation"></i>
                 </button>
 
                 <p className="text-center text-sm text-black mt-3">
-                    Don&apos;t have an account? <Link href={'/sign-up'} className="text-blue-600 font-medium cursor-pointer">Sign Up</Link>
+                    Already have an account? <Link href={'/login'} className="text-blue-600 font-medium cursor-pointer">Sign In</Link>
                 </p>
 
                 <p className="text-center text-sm text-black mt-3">OR</p>
@@ -169,7 +177,8 @@ const Home = () => {
                 <div className="flex gap-2 mt-3 font-mono text-black">
 
                     <div
-                        className="cursor-pointer flex-1 flex gap-2 justify-center items-center gap-2 h-12 rounded-xl border border-gray-400 bg-white font-medium transition hover:border-blue-600"
+                        className="cursor-pointer flex-1 cursor-pointer flex gap-2 justify-center items-center
+                     gap-2 h-12 rounded-xl border border-gray-400 bg-white font-medium transition hover:border-blue-600"
                         onClick={() => handleLoginWithGithub()}
                     >
                         <GitHubIcon />

@@ -19,6 +19,8 @@ export async function NavigationBarServer() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
+  if (!user){
+    return null
+  }
   return <NavigationBarClient user={user} />;
 }

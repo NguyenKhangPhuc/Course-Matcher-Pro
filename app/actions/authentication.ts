@@ -5,6 +5,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '../utils/supabase/server'
 import { LoginForm, SignupForm } from '../types/authentication'
 
+export async function getUser() {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.auth.getUser()
+    return { data, error }
+}
 export async function login(formData: LoginForm) {
     const supabase = await createClient()
 

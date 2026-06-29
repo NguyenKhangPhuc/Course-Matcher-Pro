@@ -1,7 +1,8 @@
 "use server";
 
-import {  parseFile } from "../helpers/file_parsing";
+import { parseFile } from "../helpers/file_parsing";
 import { CourseInsert } from "../types/course";
+import { SourceInsert } from "../types/source_";
 import { createClient } from "../utils/supabase/server";
 import OpenAI from "openai";
 
@@ -35,15 +36,6 @@ const openai = new OpenAI({
 /** Accepted file types for upload */
 type FileType = "excel" | "csv" | "json" | "pdf";
 
-/** Shape of a row in the `sources` table */
-interface SourceRow {
-  id: string;
-  user_id: string;
-  name: string;
-  file_type: FileType;
-  is_default: boolean;
-  created_at: string;
-}
 
 /** Return value of uploadAndEmbedCourses */
 export interface UploadResult {
@@ -158,10 +150,10 @@ function sleep(ms: number): Promise<void> {
 async function insertSource(
   userId: string,
   file: File
-): Promise<SourceRow> {
+): Promise<SourceInsert> {
   const fileType = getFileType(file);
-    const supabase = await createClient();
-  const { data, error } =  await supabase
+  const supabase = await createClient();
+  const { data, error } = await supabase
     .from("sources")
     .insert({
       user_id: userId,
@@ -176,7 +168,7 @@ async function insertSource(
     throw new Error(`Failed to create source record: ${error.message}`);
   }
 
-  return data as SourceRow;
+  return data as SourceInsert;
 }
 
 // =====================================================================
@@ -203,34 +195,53 @@ async function embedCourses(
   const rows: CourseInsert[] = [];
   const errors: { code: string; error: string }[] = [];
 
-  for (const course of courses) {
-    const identifier = course.code || course.name || "unknown";
+  // Chia thành batch 20, mỗi batch chạy song song
+  // OpenAI free tier: 3000 RPM → 50 concurrent là an toàn
+  const BATCH_SIZE = 20;
 
-    try {
-      const searchableText = buildSearchableText(course);
+  for (let i = 0; i < courses.length; i += BATCH_SIZE) {
+    const batch = courses.slice(i, i + BATCH_SIZE);
+    console.log(`Embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(courses.length / BATCH_SIZE)}`);
 
-      // Skip courses with no meaningful text to embed
-      if (!searchableText.trim()) {
-        errors.push({ code: identifier, error: "No searchable text — skipped" });
-        continue;
+    const results = await Promise.allSettled(
+      batch.map(async (course) => {
+        const identifier = course.code || course.name || "unknown";
+        const searchableText = buildSearchableText(course);
+        console.log('searchable_text length:', searchableText.length);
+        console.log('learning_outcomes:', course.learning_outcomes?.slice(0, 50));
+        if (!searchableText.trim()) {
+          throw new Error("No searchable text");
+        }
+
+        const embedding = await embedText(searchableText);
+
+        return {
+          ...course,
+          source_id: sourceId,
+          searchable_text: searchableText,
+          embedding: JSON.stringify(embedding),
+        };
+      })
+    );
+
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j];
+      const course = batch[j];
+      const identifier = course.code || course.name || "unknown";
+
+      if (result.status === "fulfilled") {
+        rows.push(result.value);
+      } else {
+        errors.push({
+          code: identifier,
+          error: result.reason instanceof Error ? result.reason.message : "Embedding failed",
+        });
       }
+    }
 
-      const embedding = await embedText(searchableText);
-
-      rows.push({
-        ...course,
-        source_id: sourceId,
-        searchable_text: searchableText,
-       embedding: JSON.stringify(embedding),
-      });
-
-      // Avoid hitting OpenAI rate limits (default: 3000 RPM on free tier)
-      await sleep(50);
-    } catch (err) {
-      errors.push({
-        code: identifier,
-        error: err instanceof Error ? err.message : "Embedding failed",
-      });
+    // Delay nhỏ giữa các batch để tránh rate limit
+    if (i + BATCH_SIZE < courses.length) {
+      await sleep(200);
     }
   }
 
@@ -257,7 +268,7 @@ async function batchInsertCourses(
   batchSize = 50
 ): Promise<{ inserted: number; errors: { code: string; error: string }[] }> {
   const supabase = await createClient();
-
+  console.log("Step 3")
   // Map rows sang DB shape một lần duy nhất
   const dbRows = rows.map((row) => ({
     source_id: row.source_id,
@@ -288,8 +299,10 @@ async function batchInsertCourses(
 
   // Tất cả batches chạy song song — không sequential
   const results = await Promise.all(
-    batches.map((batch) =>
-      supabase.from("courses").insert(batch).select("id")
+    batches.map((batch, index) => {
+      console.log("Insered batch " + index)
+      return supabase.from("courses").insert(batch).select("id")
+    }
     )
   );
 
@@ -371,8 +384,8 @@ export async function uploadAndEmbedCourses(
 
   try {
     // ── Step 1: Insert source ──────────────────────────────────────────
-    const source = await insertSource( user.id, file);
-    sourceId = source.id;
+    const source = await insertSource(user.id, file);
+    sourceId = source.id!;
 
     // ── Step 2: Parse file ─────────────────────────────────────────────
     let courses: CourseInsert[];
@@ -385,25 +398,25 @@ export async function uploadAndEmbedCourses(
         `File parsing failed: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
       );
     }
-
+    // return null;
     if (courses.length === 0) {
       await supabase.from("sources").delete().eq("id", sourceId);
       throw new Error(
         "No course records were found in the uploaded file. Please check the file format."
       );
     }
-
+    console.log("Courses length not equal 0 = " + courses.length)
     // ── Step 3: Embed ──────────────────────────────────────────────────
     const { rows, errors: embedErrors } = await embedCourses(courses, sourceId);
 
     // ── Step 4: Batch insert ───────────────────────────────────────────
     const { inserted, errors: insertErrors } = await batchInsertCourses(
-      
+
       rows
     );
 
     const allErrors = [...embedErrors, ...insertErrors];
-
+    console.log("Finished")
     return {
       success: inserted > 0,
       source_id: sourceId,
@@ -437,7 +450,7 @@ export async function uploadAndEmbedCourses(
  * @returns Array of SourceRow objects, ordered by created_at descending.
  * @throws  Error if the user is not authenticated.
  */
-export async function getUserSources(): Promise<SourceRow[]> {
+export async function getUserSources(): Promise<SourceInsert[]> {
   const supabase = await createClient();
 
   const {
@@ -459,7 +472,7 @@ export async function getUserSources(): Promise<SourceRow[]> {
     throw new Error(`Failed to fetch sources: ${error.message}`);
   }
 
-  return (data ?? []) as SourceRow[];
+  return (data ?? []) as SourceInsert[];
 }
 
 // =====================================================================

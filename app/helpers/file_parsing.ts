@@ -207,30 +207,22 @@ function rowToCourse(row: Record<string, unknown>): CourseInsert {
  */
 export async function parseExcel(file: File): Promise<CourseInsert[]> {
   const { read, utils } = await import("xlsx");
-
+  console.log("Step 1")
   const buffer = await file.arrayBuffer();
   const workbook = read(buffer, { type: "array" });
 
-  const courses: CourseInsert[] = [];
+  // Only read the first sheet
+  const firstSheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[firstSheetName];
 
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
+  const rows: Record<string, unknown>[] = utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: false,
+  });
 
-    // header: 1 → first row becomes column headers
-    const rows: Record<string, unknown>[] = utils.sheet_to_json(sheet, {
-      defval: "",
-      raw: false, // Converts dates / numbers to strings consistently
-    });
-
-    for (const row of rows) {
-      const course = rowToCourse(row);
-      // Skip completely empty rows
-      if (!course.name && !course.code && !course.title) continue;
-      courses.push(course);
-    }
-  }
-
-  return courses;
+  return rows
+    .map(rowToCourse)
+    .filter((course) => course.name || course.code || course.title);
 }
 
 // =====================================================================
@@ -429,6 +421,7 @@ export async function parsePdf(file: File): Promise<CourseInsert[]> {
     });
 
     const course = rowToCourse(row);
+    
     if (course.name || course.code) {
       courses.push(course);
     }
@@ -477,6 +470,7 @@ export async function parseFile(file: File): Promise<CourseInsert[]> {
   switch (ext) {
     case "xlsx":
     case "xls":
+      console.log("Start to parse excel")
       return parseExcel(file);
 
     case "csv":

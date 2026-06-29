@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { LayoutDashboard, History, HelpCircle, LogOut } from "lucide-react";
 import { createClient } from "../utils/supabase/client";
+import { signout } from "../actions/authentication";
+import { useNotification } from "../context/Notification";
 
 
 // =====================================================================
@@ -54,13 +56,18 @@ const NAV_ITEMS: NavItem[] = [
 export function NavigationBarClient({ user }: NavigationBarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { showNotification } = useNotification()
+  const handleLogout = async () => {
+    try {
+      await signout()
+    } catch (error) {
 
-  const handleSignOut = async () => {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  };
+      if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
+
+        showNotification(error.message)
+      }
+    }
+  }
 
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
   const userEmail = user?.email ?? "";
@@ -120,7 +127,7 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
           <span>Help</span>
         </Link>
 
-        <button onClick={handleSignOut} className="nav-bottom-btn nav-signout">
+        <button onClick={handleLogout} className="nav-bottom-btn nav-signout">
           <LogOut size={18} strokeWidth={1.8} />
           <span>Sign Out</span>
         </button>
