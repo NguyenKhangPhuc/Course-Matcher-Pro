@@ -90,14 +90,10 @@ function getFileType(file: File): FileType {
 function buildSearchableText(course: CourseInsert): string {
   const parts = [
     course.name && `Course: ${course.name}`,
-    course.code && `Code: ${course.code}`,
     course.programme && `Programme: ${course.programme}`,
-    course.degree_type && `Degree: ${course.degree_type}`,
     course.description && `Description: ${course.description}`,
     course.learning_outcomes && `Learning Outcomes: ${course.learning_outcomes}`,
     course.content && `Content: ${course.content}`,
-    course.assessment && `Assessment: ${course.assessment}`,
-    course.prerequisites && `Prerequisites: ${course.prerequisites}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -204,11 +200,15 @@ async function embedCourses(
     console.log(`Embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(courses.length / BATCH_SIZE)}`);
 
     const results = await Promise.allSettled(
-      batch.map(async (course) => {
+      batch.map(async (course, index) => {
         const identifier = course.code || course.name || "unknown";
         const searchableText = buildSearchableText(course);
-        console.log('searchable_text length:', searchableText.length);
-        console.log('learning_outcomes:', course.learning_outcomes?.slice(0, 50));
+        if (index < 3) { // chỉ log 3 course đầu
+          console.log('=== Course:', course.code);
+          console.log('learning_outcomes length:', course.learning_outcomes?.length);
+          console.log('searchable_text:', searchableText.slice(0, 200));
+          console.log('===');
+        }
         if (!searchableText.trim()) {
           throw new Error("No searchable text");
         }

@@ -1,5 +1,10 @@
--- Query 1: Kiểm tra type của embedding
-SELECT pg_typeof(embedding) FROM courses LIMIT 1;
-
--- Query 2: Xem thử giá trị embedding trông như thế nào
-SELECT LEFT(embedding::text, 50) FROM courses LIMIT 1;
+SELECT 
+    code,
+    COUNT(*) as total,
+    array_agg(id) as ids,
+    array_agg(programme) as programmes
+FROM courses
+WHERE code IS NOT NULL
+GROUP BY code
+HAVING COUNT(*) > 1
+ORDER BY total DESC;

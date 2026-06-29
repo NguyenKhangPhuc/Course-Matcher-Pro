@@ -210,7 +210,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                         <th>Name</th>
                                         <th>Code</th>
                                         <th>Credits</th>
-                                        <th>Description</th>
+                                        <th>Learning outcomes</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -220,7 +220,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                             <td>{course.code ?? "—"}</td>
                                             <td>{course.credits ?? "—"}</td>
                                             <td className="dashboard-table-desc">
-                                                {course.description ?? course.learning_outcomes ?? "—"}
+                                                {(course.learning_outcomes && course.learning_outcomes.length > 0) ? course.learning_outcomes.slice(0, 70) : "-"}......
                                             </td>
                                         </tr>
                                     ))}

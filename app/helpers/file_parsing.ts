@@ -56,6 +56,20 @@ function safeStr(value: unknown): string {
 }
 
 /**
+ * Avoid duplicate course
+ */
+function deduplicateByCodes(courses: CourseInsert[]): CourseInsert[] {
+  const seen = new Set<string>();
+  return courses.filter((course) => {
+    const key = course.code?.trim();
+    if (!key) return true; // Không có code thì giữ lại
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
  * Map a raw key from a parsed file to its canonical CourseInsert key.
  * Handles common naming variations found in spreadsheets / JSON exports.
  *
@@ -89,15 +103,18 @@ function mapKey(raw: string): keyof CourseInsert | null {
     course_credits: "credits",
     credits: 'credits',
     learning_outcomes: "learning_outcomes",
+    learning_outcomes_parsed: "learning_outcomes",
     learningoutcomes: "learning_outcomes",
     learning_outcome: "learning_outcomes",
     outcomes: "learning_outcomes",
     objectives: "learning_outcomes",
     content: "content",
+    content_parsed: "content",
     course_content: "content",
     topics: "content",
     syllabus: "content",
     instructor: "instructor",
+    instructor_parsed: "instructor",
     teacher: "instructor",
     lecturer: "instructor",
     person_in_charge: "instructor",
@@ -111,6 +128,7 @@ function mapKey(raw: string): keyof CourseInsert | null {
     required_courses: "prerequisites",
     assessment: "assessment",
     assessment_criteria: "assessment",
+    assessment_scale: "assessment",
     grading: "assessment",
     evaluation: "assessment",
     url: "url",
@@ -182,7 +200,14 @@ function rowToCourse(row: Record<string, unknown>): CourseInsert {
   for (const [rawKey, value] of Object.entries(row)) {
     const canonical = mapKey(rawKey);
     if (canonical && canonical !== "timing") {
-      (partial as Record<string, unknown>)[canonical] = safeStr(value);
+      const strValue = safeStr(value);
+      const existing = (partial as Record<string, unknown>)[canonical];
+
+      // Chỉ ghi đè nếu giá trị mới có nội dung
+      // hoặc field chưa có giá trị nào
+      if (strValue || !existing) {
+        (partial as Record<string, unknown>)[canonical] = strValue;
+      }
     }
   }
 
@@ -421,7 +446,7 @@ export async function parsePdf(file: File): Promise<CourseInsert[]> {
     });
 
     const course = rowToCourse(row);
-    
+
     if (course.name || course.code) {
       courses.push(course);
     }
@@ -471,17 +496,17 @@ export async function parseFile(file: File): Promise<CourseInsert[]> {
     case "xlsx":
     case "xls":
       console.log("Start to parse excel")
-      return parseExcel(file);
-
+      const coursesExcel = await parseExcel(file);
+      return deduplicateByCodes(coursesExcel)
     case "csv":
-      return parseCsv(file);
-
+      const coursesCSV = await parseCsv(file);
+      return deduplicateByCodes(coursesCSV)
     case "json":
-      return parseJson(file);
-
+      const coursesJSON = await parseJson(file);
+      return deduplicateByCodes(coursesJSON)
     case "pdf":
-      return parsePdf(file);
-
+      const coursesPDF = await parsePdf(file);
+      return deduplicateByCodes(coursesPDF)
     default:
       throw new Error(
         `Unsupported file type ".${ext}". Accepted: .xlsx, .xls, .csv, .json, .pdf`
