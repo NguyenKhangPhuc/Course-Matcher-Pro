@@ -25,9 +25,14 @@ import { uploadAndEmbedCourses } from "../actions/source_management";
 import { analyzeJobDescription } from "../services/agent";
 import { AgentResponse } from "../types/agent";
 import { CourseInsert } from "../types/course";
-import { SourceInsert } from "../types/source_";
 import { useNotification } from "../context/Notification";
 import { getCoursesBySourceId } from "../actions/course";
+import { createSearchHistoryAndMatches } from "../actions/search_history";
+import { SearchHistoryInsert } from "../types/search_history";
+import { SourceInsert } from "../types/source";
+import { SearchMatchesInsert } from "../types/search_matches";
+import { error } from "console";
+import { SaveSearchModal } from "./SaveSearchModal";
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -40,6 +45,7 @@ interface DashboardClientProps {
 interface JobForm {
     company_name: string;
     job_description: string;
+    position: string;
 }
 
 // =====================================================================
@@ -55,12 +61,14 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const [isUploading, setIsUploading] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [agentResult, setAgentResult] = useState<AgentResponse | null>(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
     const { showNotification } = useNotification();
     // ── Form ─────────────────────────────────────────────────────────────
     const {
         register,
         handleSubmit,
         formState: { errors },
+        getValues,
     } = useForm<JobForm>();
     // ── Source selection ─────────────────────────────────────────────────
     const handleSelectSource = async (sourceId: string) => {
@@ -144,6 +152,34 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
         if (file) handleFile(file);
     };
 
+    const handleSaveHistory = async () => {
+        try {
+            const searchHistory: SearchHistoryInsert = {
+                company_name: getValues('company_name'),
+                job_description: getValues('job_description'),
+                position: getValues('position'),
+                user_id: user.id,
+                technical_requirements: agentResult?.technical_requirements,
+                summary: agentResult!.summary,
+                source_id: agentResult!.source_id,
+            }
+
+            const result = await createSearchHistoryAndMatches(searchHistory, agentResult!.courses);
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            handleDismissSave()
+            showNotification('Save the matches successfully')
+        } catch (error) {
+            if (error instanceof Error) {
+                showNotification(error.message)
+            }
+        }
+    }
+    const handleDismissSave = () => {
+        setShowSaveModal(false);
+    };
+
     // ── Analyze ──────────────────────────────────────────────────────────
 
     /**
@@ -155,12 +191,16 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
         setAgentResult(null);
 
         try {
+            console.log(form)
             const result = await analyzeJobDescription({
                 job_description: form.job_description,
+                position: form.position,
                 source_id: selectedSourceId,
                 company_name: form.company_name,
             });
             setAgentResult(result);
+            setShowSaveModal(true); // ← mở modal ngay khi có kết quả
+
         } catch (err) {
             showNotification(err instanceof Error ? err.message : "Analysis failed.");
         } finally {
@@ -299,6 +339,20 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
 
                         {/* Job description */}
                         <div className="dashboard-field">
+                            <label className="dashboard-label">Position</label>
+                            <input
+                                {...register("position", { required: "Position is required" })}
+                                className="dashboard-input"
+                                placeholder="e.g. AI developer"
+                            />
+                            {errors.position && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.position.message}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="dashboard-field">
                             <label className="dashboard-label">Job Description</label>
                             <textarea
                                 {...register("job_description", {
@@ -415,6 +469,11 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                     </motion.section>
                 )}
             </AnimatePresence>
+            <SaveSearchModal
+                isOpen={showSaveModal}
+                onSave={handleSaveHistory}
+                onDismiss={handleDismissSave}
+            />
         </div>
     );
 }

@@ -3,6 +3,7 @@ import { AgentResponse } from "../types/agent"
 export interface ChatRequest {
     job_description: string;
     source_id: string;
+    position: string;
     company_name?: string;
 }
 
@@ -11,6 +12,7 @@ export const analyzeJobDescription = async (payload: ChatRequest) => {
         job_description: payload.job_description,
         source_id: payload.source_id,
         company_name: payload.company_name,
+        position: payload.position,
     })
     return response.data
 }

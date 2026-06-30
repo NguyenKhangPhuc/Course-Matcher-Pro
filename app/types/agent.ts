@@ -6,4 +6,5 @@ export interface AgentResponse {
     technical_requirements: string,
     user_id: string,
     steps_taken: string,
+    source_id: string,
 }

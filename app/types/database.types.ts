@@ -162,6 +162,96 @@ export type Database = {
         }
         Relationships: []
       }
+      search_history: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          id: string
+          job_description: string | null
+          position: string
+          source_id: string
+          summary: string | null
+          technical_requirements: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          position: string
+          source_id: string
+          summary?: string | null
+          technical_requirements?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          id?: string
+          job_description?: string | null
+          position?: string
+          source_id?: string
+          summary?: string | null
+          technical_requirements?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_history_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_history_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_matches: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          search_id: string
+          similarity: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          search_id: string
+          similarity: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          search_id?: string
+          similarity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_matches_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "search_matches_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "search_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sources: {
         Row: {
           created_at: string | null
