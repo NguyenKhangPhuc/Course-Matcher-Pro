@@ -469,6 +469,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                     </motion.section>
                 )}
             </AnimatePresence>
+            <button onClick={() => setShowSaveModal(!showSaveModal)} className="bg-black">Show</button>
             <SaveSearchModal
                 isOpen={showSaveModal}
                 onSave={handleSaveHistory}

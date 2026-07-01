@@ -46,14 +46,7 @@ export async function getSearchHistoryWithMatches(userId: string) {
 
     const { data, error } = await supabase
         .from("search_history")
-        .select(`
-      id,
-      company_name,
-      job_description,
-      technical_requirements,
-      summary,
-      created_at,
-      source_id,
+        .select(`*,
       sources (
         name
       ),
