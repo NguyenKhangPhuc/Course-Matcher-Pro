@@ -10,6 +10,8 @@ interface SaveSearchModalProps {
     isOpen: boolean;
     onSave: () => void;
     onDismiss: () => void;
+    title: string;
+    subTitle: string;
 }
 
 // =====================================================================
@@ -25,7 +27,7 @@ interface SaveSearchModalProps {
  * Covers the entire viewport with a blurred backdrop, preventing any
  * interaction with the page behind it until the user picks an option.
  */
-export function SaveSearchModal({ isOpen, onSave, onDismiss }: SaveSearchModalProps) {
+export function DynamicModal({ isOpen, onSave, onDismiss, title, subTitle }: SaveSearchModalProps) {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -47,10 +49,10 @@ export function SaveSearchModal({ isOpen, onSave, onDismiss }: SaveSearchModalPr
                         className="w-full max-w-sm mx-4 rounded-2xl bg-white p-6 shadow-2xl"
                     >
                         <h2 className="text-base font-bold text-[#1a2e35] text-center">
-                            Do you want to save your search?
+                            {title}
                         </h2>
                         <p className="mt-2 text-xs text-[#6b9daa] text-center">
-                            This search and its matched courses will be saved to your history.
+                            {subTitle}
                         </p>
 
                         <div className="mt-6 flex gap-3">

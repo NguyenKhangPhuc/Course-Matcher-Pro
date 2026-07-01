@@ -270,8 +270,12 @@ export async function parseExcel(file: File): Promise<CourseInsert[]> {
 export async function parseCsv(file: File): Promise<CourseInsert[]> {
   const Papa = (await import("papaparse")).default;
 
+  // Read to string first — avoids FileReaderSync which is browser/Web Worker only.
+  // Papa.parse(string, ...) runs entirely in Node.js without any browser APIs.
+  const text = await file.text();
+
   return new Promise((resolve, reject) => {
-    Papa.parse<Record<string, unknown>>(file, {
+    Papa.parse<Record<string, unknown>>(text, {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: false, // Keep everything as strings; we normalise ourselves
@@ -345,127 +349,6 @@ export async function parseJson(file: File): Promise<CourseInsert[]> {
     .filter((c) => c.name || c.code || c.title);
 }
 
-// =====================================================================
-// PDF PARSER (.pdf)
-// =====================================================================
-
-/**
- * Parse a PDF file into CourseInsert[].
- *
- * Strategy:
- *   1. Extract all text from every page using pdfjs-dist.
- *   2. Attempt to detect a table by looking for a header row containing
- *      recognisable column names (code, name, description, …).
- *   3. If a table is detected, split each subsequent line by 2+ spaces
- *      (common in text-extracted tables) and map columns to fields.
- *   4. If no table is detected, return a single "document" CourseInsert
- *      whose `description` field holds the full extracted text — useful
- *      when the PDF is a plain syllabus document rather than a table.
- *
- * Uses `pdfjs-dist` — install with:
- *   npm install pdfjs-dist
- *
- * NOTE: pdfjs-dist requires its worker to be configured. In Next.js add
- * this once in your layout or a top-level component:
- *
- *   import { GlobalWorkerOptions } from 'pdfjs-dist'
- *   GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
- *
- * And copy the worker to your /public folder:
- *   cp node_modules/pdfjs-dist/build/pdf.worker.min.js public/
- *
- * @param file - The File object from an <input type="file"> element.
- * @returns    Array of normalised CourseInsert objects.
- */
-export async function parsePdf(file: File): Promise<CourseInsert[]> {
-  const pdfjsLib = await import("pdfjs-dist");
-
-  const buffer = await file.arrayBuffer();
-  const loadingTask = pdfjsLib.getDocument({ data: buffer });
-  const pdf = await loadingTask.promise;
-
-  // Extract text from every page
-  const pageTexts: string[] = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ");
-    pageTexts.push(pageText);
-  }
-
-  const fullText = pageTexts.join("\n");
-  const lines = fullText
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  // Try to detect a header row
-  const headerLineIndex = lines.findIndex((line) => {
-    const lower = line.toLowerCase();
-    return (
-      (lower.includes("code") || lower.includes("name")) &&
-      (lower.includes("description") ||
-        lower.includes("credit") ||
-        lower.includes("outcome") ||
-        lower.includes("programme"))
-    );
-  });
-
-  if (headerLineIndex === -1) {
-    // No table detected — return a single document-level record
-    console.warn(
-      "[parsePdf] No table header detected. Returning full text as a single record."
-    );
-    return [
-      normalise({
-        name: file.name.replace(/\.pdf$/i, ""),
-        title: file.name.replace(/\.pdf$/i, ""),
-        description: fullText,
-        timing: {},
-      }),
-    ];
-  }
-
-  // Parse header columns
-  const headerLine = lines[headerLineIndex];
-  // Split on 2+ consecutive spaces (typical of text-extracted tables)
-  const headers = headerLine.split(/\s{2,}/).map((h) => h.trim());
-
-  const courses: CourseInsert[] = [];
-
-  for (let i = headerLineIndex + 1; i < lines.length; i++) {
-    const cells = lines[i].split(/\s{2,}/).map((c) => c.trim());
-
-    if (cells.length < 2) continue; // Skip lines that look like prose
-
-    const row: Record<string, unknown> = {};
-    headers.forEach((header, idx) => {
-      row[header] = cells[idx] ?? "";
-    });
-
-    const course = rowToCourse(row);
-
-    if (course.name || course.code) {
-      courses.push(course);
-    }
-  }
-
-  // If parsing yielded nothing, fall back to full-text record
-  if (courses.length === 0) {
-    return [
-      normalise({
-        name: file.name.replace(/\.pdf$/i, ""),
-        title: file.name.replace(/\.pdf$/i, ""),
-        description: fullText,
-        timing: {},
-      }),
-    ];
-  }
-
-  return courses;
-}
 
 // =====================================================================
 // UNIFIED ENTRY POINT
@@ -504,9 +387,6 @@ export async function parseFile(file: File): Promise<CourseInsert[]> {
     case "json":
       const coursesJSON = await parseJson(file);
       return deduplicateByCodes(coursesJSON)
-    case "pdf":
-      const coursesPDF = await parsePdf(file);
-      return deduplicateByCodes(coursesPDF)
     default:
       throw new Error(
         `Unsupported file type ".${ext}". Accepted: .xlsx, .xls, .csv, .json, .pdf`

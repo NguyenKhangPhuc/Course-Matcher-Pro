@@ -32,7 +32,7 @@ import { SearchHistoryInsert } from "../types/search_history";
 import { SourceInsert } from "../types/source";
 import { SearchMatchesInsert } from "../types/search_matches";
 import { error } from "console";
-import { SaveSearchModal } from "./SaveSearchModal";
+import { DynamicModal } from "./SaveSearchModal";
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -284,7 +284,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                         <input
                             id="file-input"
                             type="file"
-                            accept=".xlsx,.xls,.csv,.json,.pdf"
+                            accept=".xlsx,.xls,.csv,.json"
                             className="hidden"
                             onChange={handleInputChange}
                         />
@@ -299,17 +299,32 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                 <span className="dashboard-dropzone-sub">
                                     Support for{" "}
                                     <strong>Excel</strong>, <strong>CSV</strong>,{" "}
-                                    <strong>JSON</strong>, and <strong>PDF</strong> files
+                                    <strong>JSON</strong> files
                                 </span>
                             </>
                         )}
                     </div>
 
-                    {/* Example format badges */}
+                    {/* Example format badges — click to download sample file */}
                     <div className="dashboard-examples">
                         <span className="dashboard-examples-label">EXAMPLE FORMATS</span>
-                        {["Excel", "CSV", "JSON", "PDF"].map((fmt) => (
-                            <span key={fmt} className="dashboard-example-badge">{fmt}</span>
+                        {(
+                            [
+                                { label: "Excel", file: "courses_example.xlsx" },
+                                { label: "CSV",   file: "courses_example.csv"  },
+                                { label: "JSON",  file: "courses_example.json" },
+                            ] as const
+                        ).map(({ label, file }) => (
+                            <a
+                                key={label}
+                                href={`/examples/${file}`}
+                                download={file}
+                                className="dashboard-example-badge"
+                                style={{ textDecoration: "none", cursor: "pointer" }}
+                                title={`Download ${label} example`}
+                            >
+                                {label}
+                            </a>
                         ))}
                     </div>
                 </section>
@@ -464,16 +479,20 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                         </div>
                                     </motion.div>
                                 ))}
+                                <button onClick={() => setShowSaveModal(!showSaveModal)} className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Show<i className="animation"></i>
+                                </button>
                             </div>
                         )}
                     </motion.section>
                 )}
             </AnimatePresence>
-            <button onClick={() => setShowSaveModal(!showSaveModal)} className="bg-black">Show</button>
-            <SaveSearchModal
+
+            <DynamicModal
                 isOpen={showSaveModal}
                 onSave={handleSaveHistory}
                 onDismiss={handleDismissSave}
+                title="Do you want to save your search?"
+                subTitle="This search and its matched courses will be saved to your history."
             />
         </div>
     );

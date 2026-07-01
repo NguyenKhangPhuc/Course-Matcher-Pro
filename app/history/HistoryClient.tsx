@@ -22,6 +22,7 @@ import type { User } from "@supabase/supabase-js";
 import { SearchHistoryWithMatches } from "../types/search_history";
 import { useNotification } from "../context/Notification";
 import { deleteSearchHistoryById } from "../actions/search_history";
+import { DynamicModal } from "../dashboard/SaveSearchModal";
 
 
 // =====================================================================
@@ -55,6 +56,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const { showNotification } = useNotification()
   const toggleExpand = (id: string) => {
@@ -65,23 +67,34 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
    * Delete a search history entry — calls the server action, removes
    * the item from local state on success, and shows an error toast on failure.
    */
-  const handleDelete = async (searchId: string) => {
-    setDeletingId(searchId);
+  const handleDelete = async () => {
     try {
-      const { error } = await deleteSearchHistoryById(searchId);
+      if (!deletingId) {
+        throw new Error("Fail to delete")
+      }
+      const { error } = await deleteSearchHistoryById(deletingId);
       if (error) {
         showNotification("Failed to delete search history.");
         return;
       }
-      setItems((prev) => prev.filter((item) => item.id !== searchId));
-      if (expandedId === searchId) setExpandedId(null);
+      setItems((prev) => prev.filter((item) => item.id !== deletingId));
+      if (expandedId === deletingId) setExpandedId(null);
       showNotification("Search history deleted.");
+      setShowSaveModal(false)
     } catch (err) {
       showNotification(err instanceof Error ? err.message : "Failed to delete.");
     } finally {
       setDeletingId(null);
     }
   };
+
+  const onOpenModal = (searchId: string) => {
+    setDeletingId(searchId);
+    setShowSaveModal(true)
+  }
+  const onDismiss = () => {
+    setShowSaveModal(false)
+  }
 
   return (
     <div className="flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-9 py-8 flex flex-col gap-7 overflow-y-auto overflow-x-hidden">
@@ -237,7 +250,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
                       {/* Delete button */}
                       <div className="flex justify-end">
                         <button
-                          onClick={() => handleDelete(item.id!)}
+                          onClick={() => onOpenModal(item.id!)}
                           disabled={deletingId === item.id}
                           className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-[#c0392b] hover:bg-[#fde8e8] px-3 py-2 rounded-lg transition-colors disabled:opacity-50 shrink-0 duration-300"
                         >
@@ -253,6 +266,13 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
           );
         })}
       </div>
+      <DynamicModal
+        isOpen={showSaveModal}
+        onSave={handleDelete}
+        onDismiss={onDismiss}
+        title="Do you want to delete this search?"
+        subTitle="This search and its matched courses will be deleted from your history."
+      />
     </div >
   );
 }
