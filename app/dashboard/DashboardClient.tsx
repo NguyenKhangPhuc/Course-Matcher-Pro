@@ -34,6 +34,7 @@ import { SearchMatchesInsert } from "../types/search_matches";
 import { error } from "console";
 import { DynamicModal } from "./SaveSearchModal";
 import { incrementSearchUsage } from "../actions/usage";
+import { useLoader } from "../context/LoaderContext";
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -64,6 +65,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const [agentResult, setAgentResult] = useState<AgentResponse | null>(null);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const { showNotification } = useNotification();
+    const { setIsOpenLoader } = useLoader();
     // ── Form ─────────────────────────────────────────────────────────────
     const {
         register,
@@ -75,13 +77,17 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const handleSelectSource = async (sourceId: string) => {
         setSelectedSourceId(sourceId);
         setAgentResult(null);
+        setIsOpenLoader(true)
         try {
             const data = await getCoursesBySourceId(sourceId);
             if (data.error) {
                 throw new Error(data.error)
             }
             setCourses(data.data ?? []);
+            setIsOpenLoader(false)
+            showNotification('Load the courses successfully')
         } catch (err) {
+            setIsOpenLoader(false)
             if (err instanceof Error) {
                 showNotification(err.message)
             }
@@ -96,6 +102,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
      */
     const handleFile = useCallback(async (file: File) => {
         setIsUploading(true);
+        setIsOpenLoader(true);
         try {
             const formData = new FormData();
             formData.append("file", file);
@@ -106,8 +113,6 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                 showNotification(`Upload failed: ${result.errors[0]?.error ?? "Unknown error"}`);
                 return;
             }
-
-            showNotification(`Loaded ${result.inserted} courses successfully.`);
 
             // Auto-select the newly uploaded source
             setSelectedSourceId(result.source_id);
@@ -131,10 +136,13 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                 } as SourceInsert,
                 ...prev,
             ]);
+            setIsUploading(false)
+            setIsOpenLoader(false)
+            showNotification(`Loaded ${result.inserted} courses successfully.`);
+
         } catch (err) {
+            setIsOpenLoader(false)
             showNotification(err instanceof Error ? err.message : "Upload failed.");
-        } finally {
-            setIsUploading(false);
         }
     }, [user.id]);
 
@@ -154,6 +162,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     };
 
     const handleSaveHistory = async () => {
+        setIsOpenLoader(true)
         try {
             const searchHistory: SearchHistoryInsert = {
                 company_name: getValues('company_name'),
@@ -169,9 +178,12 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
             if (result.error) {
                 throw new Error(result.error);
             }
+            setIsOpenLoader(false)
             handleDismissSave()
             showNotification('Save the matches successfully')
         } catch (error) {
+            setIsOpenLoader(false)
+
             if (error instanceof Error) {
                 showNotification(error.message)
             }
@@ -190,7 +202,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
         if (!selectedSourceId) return;
         setIsAnalyzing(true);
         setAgentResult(null);
-
+        setIsOpenLoader(true);
         try {
             const usage = await incrementSearchUsage(user.id);
             if (usage.error) {
@@ -205,11 +217,12 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
             });
             setAgentResult(result);
             setShowSaveModal(true); // ← mở modal ngay khi có kết quả
-
-        } catch (err) {
-            showNotification(err instanceof Error ? err.message : "Analysis failed.");
-        } finally {
             setIsAnalyzing(false);
+            setIsOpenLoader(false)
+            showNotification('Analyze the job description successfully')
+        } catch (err) {
+            setIsOpenLoader(false)
+            showNotification(err instanceof Error ? err.message : "Analysis failed.");
         }
     };
 
