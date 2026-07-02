@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '../utils/supabase/server'
-import { LoginForm, SignupForm } from '../types/authentication'
+import { LoginForm, SignupForm, VerifyAccountForm } from '../types/authentication'
 
 export async function getUser() {
     const supabase = await createClient();
@@ -78,4 +78,22 @@ export async function resendVerificationCode(email: string, origin: string) {
     }
 
     return { data }
+}
+
+export async function verifySignUpAccount(verifyAccount: VerifyAccountForm) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.verifyOtp(
+        {
+            email: verifyAccount.email,
+            token: verifyAccount.otp,
+            type: 'signup'
+        }
+    )
+    if (error) {
+        return { error: 'Fail to verify the OTP' }
+    }
+    if (data.session == null) {
+        return { error: 'Fail to verify the OTP' }
+    }
+    return { data, error }
 }
