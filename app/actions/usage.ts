@@ -26,3 +26,19 @@ export async function incrementSearchUsage(userId: string) {
 
     return { data: true, error: null }
 }
+
+export async function checkIsValidUsage(userId: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.from('user_usage').select('*').eq('user_id', userId).single();
+    if (error) {
+        return { error: error.message }
+    }
+    if (!data){
+        return {error: 'Checking user usage fail, please contact staff'}
+        
+    }
+    if (data.searches_today! >= data.searches_limit!) {
+        return {error: 'Usage limit reached, please wait until 00:00 today'}
+    }
+    return {data, error}
+}

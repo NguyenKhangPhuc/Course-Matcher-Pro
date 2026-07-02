@@ -26,20 +26,20 @@ export const VerifyAccount = ({ email }: { email: string }) => {
     const { setIsOpenLoader } = useLoader()
 
     const onSubmit = async (userInfo: VerifyAccountForm) => {
-        setIsOpenLoader(true)
+        setIsOpenLoader({ isOpen: true })
         try {
             const { error } = await verifySignUpAccount(userInfo)
             if (error) {
                 throw new Error(error)
             }
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification('Verify successfully')
             router.push('/login')
         } catch (error) {
             if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
                 showNotification(error.message)
             }
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
         }
     }
     return (

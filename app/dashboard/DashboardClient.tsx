@@ -33,7 +33,7 @@ import { SourceInsert } from "../types/source";
 import { SearchMatchesInsert } from "../types/search_matches";
 import { error } from "console";
 import { DynamicModal } from "./SaveSearchModal";
-import { incrementSearchUsage } from "../actions/usage";
+import { checkIsValidUsage, incrementSearchUsage } from "../actions/usage";
 import { useLoader } from "../context/LoaderContext";
 // =====================================================================
 // TYPES
@@ -77,17 +77,17 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const handleSelectSource = async (sourceId: string) => {
         setSelectedSourceId(sourceId);
         setAgentResult(null);
-        setIsOpenLoader(true)
+        setIsOpenLoader({ isOpen: true })
         try {
             const data = await getCoursesBySourceId(sourceId);
             if (data.error) {
                 throw new Error(data.error)
             }
             setCourses(data.data ?? []);
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification('Load the courses successfully')
         } catch (err) {
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             if (err instanceof Error) {
                 showNotification(err.message)
             }
@@ -102,7 +102,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
      */
     const handleFile = useCallback(async (file: File) => {
         setIsUploading(true);
-        setIsOpenLoader(true);
+        setIsOpenLoader({ isOpen: true, title: "Load source could take very long, stay tuned" });
         try {
             const formData = new FormData();
             formData.append("file", file);
@@ -137,11 +137,11 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                 ...prev,
             ]);
             setIsUploading(false)
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification(`Loaded ${result.inserted} courses successfully.`);
 
         } catch (err) {
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification(err instanceof Error ? err.message : "Upload failed.");
         }
     }, [user.id]);
@@ -162,7 +162,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     };
 
     const handleSaveHistory = async () => {
-        setIsOpenLoader(true)
+        setIsOpenLoader({ isOpen: true })
         try {
             const searchHistory: SearchHistoryInsert = {
                 company_name: getValues('company_name'),
@@ -178,11 +178,11 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
             if (result.error) {
                 throw new Error(result.error);
             }
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             handleDismissSave()
             showNotification('Save the matches successfully')
         } catch (error) {
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
 
             if (error instanceof Error) {
                 showNotification(error.message)
@@ -202,8 +202,13 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
         if (!selectedSourceId) return;
         setIsAnalyzing(true);
         setAgentResult(null);
-        setIsOpenLoader(true);
+        setIsOpenLoader({ isOpen: true, title: 'Analyze the description takes some time, stay tuned!' });
         try {
+            const usageCheck = await checkIsValidUsage(user.id);
+            if (usageCheck.error) {
+                showNotification(usageCheck.error);
+                return;
+            }
             const usage = await incrementSearchUsage(user.id);
             if (usage.error) {
                 showNotification(usage.error);
@@ -218,10 +223,10 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
             setAgentResult(result);
             setShowSaveModal(true); // ← mở modal ngay khi có kết quả
             setIsAnalyzing(false);
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification('Analyze the job description successfully')
         } catch (err) {
-            setIsOpenLoader(false)
+            setIsOpenLoader({ isOpen: false })
             showNotification(err instanceof Error ? err.message : "Analysis failed.");
         }
     };
@@ -497,8 +502,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                         </div>
                                     </motion.div>
                                 ))}
-                                <button onClick={() => setShowSaveModal(!showSaveModal)} className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Show<i className="animation"></i>
-                                </button>
+
                             </div>
                         )}
                     </motion.section>

@@ -23,6 +23,7 @@ import { SearchHistoryWithMatches } from "../types/search_history";
 import { useNotification } from "../context/Notification";
 import { deleteSearchHistoryById } from "../actions/search_history";
 import { DynamicModal } from "../dashboard/SaveSearchModal";
+import { useLoader } from "../context/LoaderContext";
 
 
 // =====================================================================
@@ -57,7 +58,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
-
+  const {setIsOpenLoader} = useLoader()
   const { showNotification } = useNotification()
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -68,6 +69,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
    * the item from local state on success, and shows an error toast on failure.
    */
   const handleDelete = async () => {
+    setIsOpenLoader({ isOpen: true })
     try {
       if (!deletingId) {
         throw new Error("Fail to delete")
@@ -79,9 +81,11 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
       }
       setItems((prev) => prev.filter((item) => item.id !== deletingId));
       if (expandedId === deletingId) setExpandedId(null);
+      setIsOpenLoader({ isOpen: false })
       showNotification("Search history deleted.");
       setShowSaveModal(false)
     } catch (err) {
+      setIsOpenLoader({ isOpen: false })
       showNotification(err instanceof Error ? err.message : "Failed to delete.");
     } finally {
       setDeletingId(null);

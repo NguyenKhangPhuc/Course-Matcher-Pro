@@ -4,10 +4,15 @@ import { useContext, useState, createContext, Dispatch, SetStateAction } from "r
 // The type of the Notification controlle
 
 // The type to be passed in the notification (in value)
-interface LoaderProviderValueType {
-    isOpenLoader: boolean,
-    setIsOpenLoader: Dispatch<SetStateAction<boolean>>
+interface LoaderAttributes {
+    title?: string,
+    isOpen: boolean
 }
+interface LoaderProviderValueType {
+    isOpenLoader: LoaderAttributes,
+    setIsOpenLoader: Dispatch<SetStateAction<LoaderAttributes>>
+}
+
 
 // Create the context
 const LoaderContext = createContext<LoaderProviderValueType | undefined>(undefined);
@@ -15,7 +20,7 @@ const LoaderContext = createContext<LoaderProviderValueType | undefined>(undefin
 // Create the provider and pass the controller to every child in provider
 export const LoaderProvider = ({ children }: { children: React.ReactNode }) => {
     // Notification controller
-    const [isOpenLoader, setIsOpenLoader] = useState<boolean>(false);
+    const [isOpenLoader, setIsOpenLoader] = useState<LoaderAttributes>({isOpen: false});
 
     return (
         <LoaderContext.Provider value={{ isOpenLoader, setIsOpenLoader, }}>
