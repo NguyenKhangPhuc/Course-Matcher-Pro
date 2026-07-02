@@ -282,11 +282,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_usage: {
+        Row: {
+          id: string
+          last_reset_date: string | null
+          searches_limit: number | null
+          searches_today: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_reset_date?: string | null
+          searches_limit?: number | null
+          searches_today?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_reset_date?: string | null
+          searches_limit?: number | null
+          searches_today?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      increment_search_usage: { Args: { p_user_id: string }; Returns: boolean }
       match_courses: {
         Args: {
           match_count?: number

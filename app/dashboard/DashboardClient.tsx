@@ -33,6 +33,7 @@ import { SourceInsert } from "../types/source";
 import { SearchMatchesInsert } from "../types/search_matches";
 import { error } from "console";
 import { DynamicModal } from "./SaveSearchModal";
+import { incrementSearchUsage } from "../actions/usage";
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -191,7 +192,11 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
         setAgentResult(null);
 
         try {
-            console.log(form)
+            const usage = await incrementSearchUsage(user.id);
+            if (usage.error) {
+                showNotification(usage.error);
+                return;
+            }
             const result = await analyzeJobDescription({
                 job_description: form.job_description,
                 position: form.position,
@@ -311,8 +316,8 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                         {(
                             [
                                 { label: "Excel", file: "courses_example.xlsx" },
-                                { label: "CSV",   file: "courses_example.csv"  },
-                                { label: "JSON",  file: "courses_example.json" },
+                                { label: "CSV", file: "courses_example.csv" },
+                                { label: "JSON", file: "courses_example.json" },
                             ] as const
                         ).map(({ label, file }) => (
                             <a
