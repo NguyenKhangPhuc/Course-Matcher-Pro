@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavigationBarServer } from "./components/NavigationBarServer";
 import { LoaderProvider } from "./context/LoaderContext";
 import { NotificationProvider } from "./context/Notification";
+import Loader from "./components/Loader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         >
           <body className="flex min-h-screen">
             <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
+            <Loader/>
             <main className="flex-1">    {/* flex-1 — tự lấp đầy phần còn lại */}
               {children}
             </main>
