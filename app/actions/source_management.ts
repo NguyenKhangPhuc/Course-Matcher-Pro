@@ -2,7 +2,7 @@
 
 import { parseFile } from "../helpers/file_parsing";
 import { CourseInsert } from "../types/course";
-import { SourceInsert } from "../types/source_";
+import { SourceInsert } from "../types/source";
 import { createClient } from "../utils/supabase/server";
 import OpenAI from "openai";
 

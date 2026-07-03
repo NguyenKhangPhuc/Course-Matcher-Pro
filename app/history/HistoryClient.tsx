@@ -58,7 +58,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const {setIsOpenLoader} = useLoader()
+  const { setIsOpenLoader } = useLoader()
   const { showNotification } = useNotification()
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -101,7 +101,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
   }
 
   return (
-    <div className="flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-9 py-8 flex flex-col gap-7 overflow-y-auto overflow-x-hidden">
+    <div className="flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-4 sm:px-6 lg:px-9 py-5 sm:py-8 flex flex-col gap-5 sm:gap-7 overflow-y-auto overflow-x-hidden">
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#1a3a8f] shrink-0">
@@ -196,7 +196,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
                           No matched courses for this search.
                         </p>
                       ) : (
-                        <div className="grid grid-cols-3 gap-3 mb-5 min-w-0">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5 min-w-0">
                           {item.search_matches.map((match) => {
                             const course = match.courses;
                             if (!course) return null;

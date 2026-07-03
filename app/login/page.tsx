@@ -36,7 +36,7 @@ const Home = () => {
         }
     }
     const onSubmit = async (userInfo: LoginForm) => {
-        setIsOpenLoader(true)
+        setIsOpenLoader({isOpen: true})
         try {
             const { error } = await login(userInfo)
 
@@ -63,7 +63,7 @@ const Home = () => {
             } else if (error instanceof Error && error.message == 'NEXT_REDIRECT') {
                 showNotification('Login successfully')
             }
-            setIsOpenLoader(false)
+            setIsOpenLoader({isOpen: false})
 
         }
     }

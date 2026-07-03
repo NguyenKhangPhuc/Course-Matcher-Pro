@@ -50,10 +50,18 @@ body {
   flex-direction: column;
   width: 220px;
   min-height: 100vh;
+  height: 100vh;
+  /* ← giới hạn chiều cao theo viewport */
+  position: sticky;
+  /* ← bám theo khi scroll */
+  top: 0;
+  /* ← bám từ trên cùng */
   background-color: #cae7f0;
   padding: 24px 12px;
   gap: 0;
   flex-shrink: 0;
+  overflow-y: auto;
+  /* ← nếu nav content dài hơn viewport thì scroll được */
 }
 
 /* ── Brand block ───────────────────────────────────────────── */
@@ -239,19 +247,10 @@ body {
 
 hboard · CSS
 /* ================================================================
-   DASHBOARD PAGE
-   Add these to globals.css
-   Palette consistent with nav-sidebar:
-     page bg   : #F0F7FA
-     card bg   : #FFFFFF
-     border    : #4ad2ff
-     teal      : #7DD8CC  (accent / active)
-     dark teal : #1A5C55
-     text-main : #1A2E35
-     text-muted: #6B9DAA
+   DASHBOARD PAGE — RESPONSIVE
    ================================================================ */
 
-/* ── Page shell (sits next to the 220px sidebar) ─────────────── */
+/* ── Page shell ─────────────────────────────────────────────── */
 .dashboard-page {
   flex: 1;
   min-height: 100vh;
@@ -263,12 +262,33 @@ hboard · CSS
   overflow-y: auto;
 }
 
-/* ── Two-column grid ─────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .dashboard-page {
+    padding: 24px 20px;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page {
+    padding: 16px 14px;
+    gap: 16px;
+  }
+}
+
+/* ── Two-column grid → stacks vertically below 1024px ───────── */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 24px;
   align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 /* ── Card ────────────────────────────────────────────────────── */
@@ -281,13 +301,27 @@ hboard · CSS
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  /* quan trọng — ngăn flex child bị phình ra */
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .dashboard-card {
+    padding: 16px;
+    border-radius: 12px;
+    gap: 12px;
+  }
+}
+
+/* Sticky only on large screens — on mobile just flows normally */
 .dashboard-card-job {
   position: sticky;
   top: 32px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-card-job {
+    position: static;
+  }
 }
 
 /* ── Section title ───────────────────────────────────────────── */
@@ -299,6 +333,12 @@ hboard · CSS
   font-weight: 700;
   color: #1a2e35;
   margin: 0;
+}
+
+@media (max-width: 640px) {
+  .dashboard-section-title {
+    font-size: 14px;
+  }
 }
 
 .dashboard-section-icon {
@@ -348,17 +388,14 @@ hboard · CSS
 .dashboard-table-wrap {
   width: 100%;
   max-height: 280px;
-  /* giới hạn chiều cao — chỉnh số này tùy ý */
   overflow-x: auto;
   overflow-y: auto;
-  /* scroll dọc */
   border-radius: 10px;
   border: 1px solid #4ad2ff;
   scrollbar-width: thin;
   scrollbar-color: #c8e6ee transparent;
 }
 
-/* Webkit scrollbar (Chrome, Safari, Edge) */
 .dashboard-table-wrap::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -381,14 +418,17 @@ hboard · CSS
   background: transparent;
 }
 
-/* ── Table — không để width: 100% gây phình ── */
 .dashboard-table {
   width: max-content;
-  /* co theo content, không ép full width */
   min-width: 100%;
-  /* nhưng tối thiểu phải full wrap */
   border-collapse: collapse;
   font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-table {
+    font-size: 12px;
+  }
 }
 
 .dashboard-table thead tr {
@@ -428,12 +468,24 @@ hboard · CSS
   word-wrap: normal;
 }
 
+@media (max-width: 640px) {
+  .dashboard-table-name {
+    max-width: 160px;
+  }
+}
+
 .dashboard-table-desc {
   color: #6b9daa;
   font-style: italic;
   min-width: 280px;
   max-width: 500px;
+}
 
+@media (max-width: 640px) {
+  .dashboard-table-desc {
+    min-width: 160px;
+    max-width: 240px;
+  }
 }
 
 .dashboard-table-empty {
@@ -455,6 +507,12 @@ hboard · CSS
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
   background-color: #fafeff;
+}
+
+@media (max-width: 640px) {
+  .dashboard-dropzone {
+    padding: 20px 14px;
+  }
 }
 
 .dashboard-dropzone:hover {
@@ -486,6 +544,7 @@ hboard · CSS
 .dashboard-dropzone-sub {
   font-size: 12px;
   color: #6b9daa;
+  text-align: center;
 }
 
 /* ── Example format badges ───────────────────────────────────── */
@@ -543,6 +602,8 @@ hboard · CSS
   background: #fafeff;
   outline: none;
   transition: border-color 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-input:focus {
@@ -566,6 +627,20 @@ hboard · CSS
   transition: border-color 0.15s ease;
   font-family: inherit;
   min-height: 350px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-textarea {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-textarea {
+    min-height: 140px;
+  }
 }
 
 .dashboard-textarea:focus {
@@ -592,6 +667,7 @@ hboard · CSS
   cursor: pointer;
   transition: background-color 0.2s ease, opacity 0.2s ease;
   letter-spacing: 0.01em;
+  width: 100%;
 }
 
 .dashboard-analyze-btn:hover:not(:disabled) {
@@ -616,6 +692,8 @@ hboard · CSS
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .dashboard-relevance-badge {
@@ -650,13 +728,32 @@ hboard · CSS
   line-height: 1.6;
 }
 
-/* ── Results grid ────────────────────────────────────────────── */
+/* ── Results grid
+     desktop  : auto-fill minmax(260px) — as many columns as fit
+     tablet   : 2 columns (640px–1023px)
+     mobile   : 1 column  (<640px)
+   ──────────────────────────────────────────────────────────── */
 .dashboard-results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 16px;
 }
 
+@media (max-width: 1023px) {
+  .dashboard-results-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-results-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* ── Result card ─────────────────────────────────────────────── */
 .dashboard-result-card {
   border: 1px solid #4ad2ff;
   border-radius: 14px;
@@ -666,6 +763,14 @@ hboard · CSS
   flex-direction: column;
   gap: 10px;
   transition: box-shadow 0.2s ease;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .dashboard-result-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
 }
 
 .dashboard-result-card:hover {
@@ -698,6 +803,7 @@ hboard · CSS
   font-weight: 700;
   color: #1a2e35;
   line-height: 1.3;
+  word-break: break-words;
 }
 
 .dashboard-result-desc {
@@ -705,6 +811,7 @@ hboard · CSS
   color: #6b9daa;
   line-height: 1.5;
   flex: 1;
+  word-break: break-words;
 }
 
 .dashboard-result-footer {
@@ -712,6 +819,7 @@ hboard · CSS
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
+  gap: 8px;
 }
 
 .dashboard-result-tag {
@@ -721,6 +829,10 @@ hboard · CSS
   background-color: #e8f4f8;
   padding: 3px 10px;
   border-radius: 999px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 75%;
 }
 
 .dashboard-result-link {
@@ -729,6 +841,7 @@ hboard · CSS
   display: flex;
   align-items: center;
   transition: color 0.15s ease;
+  shrink: 0;
 }
 
 .dashboard-result-link:hover {
@@ -737,10 +850,10 @@ hboard · CSS
 
 
 /* Copyright - 2026 andrew-demchenk0 (A)  */
-/* From Uiverse.io by andrew-demchenk0 */ 
+/* From Uiverse.io by andrew-demchenk0 */
 .cube-loader {
   position: relative;
-/* u can choose any size */
+  /* u can choose any size */
   width: 75px;
   height: 75px;
   transform-style: preserve-3d;
@@ -773,27 +886,25 @@ hboard · CSS
   height: 100%;
   /* top: 0;
   left: 0; */
-                                     /* width 75px / 2 = 37.5px */
+  /* width 75px / 2 = 37.5px */
   transform: rotateY(calc(90deg * var(--i))) translateZ(37.5px);
-  background: linear-gradient(
-    to bottom,
-    hsl(330, 3.13%, 25.1%) 0%,
-    hsl(177.27, 21.71%, 32.06%) 5.5%,
-    hsl(176.67, 34.1%, 36.88%) 12.1%,
-    hsl(176.61, 42.28%, 40.7%) 19.6%,
-    hsl(176.63, 48.32%, 43.88%) 27.9%,
-    hsl(176.66, 53.07%, 46.58%) 36.6%,
-    hsl(176.7, 56.94%, 48.91%) 45.6%,
-    hsl(176.74, 62.39%, 50.91%) 54.6%,
-    hsl(176.77, 69.86%, 52.62%) 63.4%,
-    hsl(176.8, 76.78%, 54.08%) 71.7%,
-    hsl(176.83, 83.02%, 55.29%) 79.4%,
-    hsl(176.85, 88.44%, 56.28%) 86.2%,
-    hsl(176.86, 92.9%, 57.04%) 91.9%,
-    hsl(176.88, 96.24%, 57.59%) 96.3%,
-    hsl(176.88, 98.34%, 57.93%) 99%,
-    hsl(176.89, 99.07%, 58.04%) 100%
-  );
+  background: linear-gradient(to bottom,
+      hsl(330, 3.13%, 25.1%) 0%,
+      hsl(177.27, 21.71%, 32.06%) 5.5%,
+      hsl(176.67, 34.1%, 36.88%) 12.1%,
+      hsl(176.61, 42.28%, 40.7%) 19.6%,
+      hsl(176.63, 48.32%, 43.88%) 27.9%,
+      hsl(176.66, 53.07%, 46.58%) 36.6%,
+      hsl(176.7, 56.94%, 48.91%) 45.6%,
+      hsl(176.74, 62.39%, 50.91%) 54.6%,
+      hsl(176.77, 69.86%, 52.62%) 63.4%,
+      hsl(176.8, 76.78%, 54.08%) 71.7%,
+      hsl(176.83, 83.02%, 55.29%) 79.4%,
+      hsl(176.85, 88.44%, 56.28%) 86.2%,
+      hsl(176.86, 92.9%, 57.04%) 91.9%,
+      hsl(176.88, 96.24%, 57.59%) 96.3%,
+      hsl(176.88, 98.34%, 57.93%) 99%,
+      hsl(176.89, 99.07%, 58.04%) 100%);
 }
 
 .cube-top {
@@ -801,7 +912,7 @@ hboard · CSS
   width: 75px;
   height: 75px;
   background: hsl(330, 3.13%, 25.1%) 0%;
-                      /* width 75px / 2 = 37.5px */
+  /* width 75px / 2 = 37.5px */
   transform: rotateX(90deg) translateZ(37.5px);
   transform-style: preserve-3d;
 }
@@ -809,15 +920,55 @@ hboard · CSS
 .cube-top::before {
   content: '';
   position: absolute;
-/* u can choose any size */
+  /* u can choose any size */
   width: 75px;
   height: 75px;
   background: hsl(176.61, 42.28%, 40.7%) 19.6%;
   transform: translateZ(-90px);
   filter: blur(10px);
   box-shadow: 0 0 10px #323232,
-              0 0 20px hsl(176.61, 42.28%, 40.7%) 19.6%,
-              0 0 30px #323232,
-              0 0 40px hsl(176.61, 42.28%, 40.7%) 19.6%;
+    0 0 20px hsl(176.61, 42.28%, 40.7%) 19.6%,
+    0 0 30px #323232,
+    0 0 40px hsl(176.61, 42.28%, 40.7%) 19.6%;
 }
 
+/* From Uiverse.io by talhabangyal */
+.hamburger {
+  cursor: pointer;
+}
+
+.hamburger input {
+  display: none;
+}
+
+.hamburger svg {
+  /* The size of the SVG defines the overall size */
+  height: 3em;
+  /* Define the transition for transforming the SVG */
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.line {
+  fill: none;
+  stroke: black;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  /* Define the transition for transforming the Stroke */
+  transition:
+    stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.line-top-bottom {
+  stroke-dasharray: 12 63;
+}
+
+.hamburger input:checked+svg {
+  transform: rotate(-45deg);
+}
+
+.hamburger input:checked+svg .line-top-bottom {
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.42;
+}

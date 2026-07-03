@@ -1,4 +1,5 @@
 import { createClient } from "../utils/supabase/server";
+import MobileNavigationBar from "./MobileNavigationBar";
 import { NavigationBarClient } from "./NavigationBarClient";
 
 /**
@@ -19,8 +20,13 @@ export async function NavigationBarServer() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user){
+  if (!user) {
     return null
   }
-  return <NavigationBarClient user={user} />;
+  return <>
+    <div className="hidden md:block">
+      <NavigationBarClient user={user} />
+    </div>
+    <MobileNavigationBar user={user} />
+  </>;
 }

@@ -23,7 +23,7 @@ const Home = () => {
     const { setIsOpenLoader } = useLoader()
 
     const onSubmit = async (signupInfo: SignupForm) => {
-        setIsOpenLoader(true)
+        setIsOpenLoader({isOpen: true})
         try {
             const { error } = await signup(signupInfo, window.location.origin)
             if (error) {
@@ -40,7 +40,7 @@ const Home = () => {
             else if (error instanceof Error && error.message == 'NEXT_REDIRECT') {
                 showNotification('Sign up successfully, please verify your email')
             }
-            setIsOpenLoader(false)
+            setIsOpenLoader({isOpen: false})
         }
     }
     const handleLoginWithGithub = async () => {
