@@ -10,7 +10,7 @@
  * - Agent analysis call and results display
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,9 +22,9 @@ import {
 } from "@mui/icons-material";
 import type { User } from "@supabase/supabase-js";
 import { uploadAndEmbedCourses } from "../actions/source_management";
-import { analyzeJobDescription } from "../services/agent";
-import { AgentResponse } from "../types/agent";
-import { CourseInsert } from "../types/course";
+import { analyzeJobDescriptionStreamingAxios } from "../services/agent";
+import { AgentResponseClient, DoneResponse, ErrorChunk, } from "../types/agent";
+import { CourseAgentResponse, CourseInsert } from "../types/course";
 import { useNotification } from "../context/Notification";
 import { getCoursesBySourceId } from "../actions/course";
 import { createSearchHistoryAndMatches } from "../actions/search_history";
@@ -35,6 +35,7 @@ import { error } from "console";
 import { DynamicModal } from "./SaveSearchModal";
 import { checkIsValidUsage, incrementSearchUsage } from "../actions/usage";
 import { useLoader } from "../context/LoaderContext";
+import { ComponentLoader } from "../components/ComponentLoader";
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -62,10 +63,24 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [agentResult, setAgentResult] = useState<AgentResponse | null>(null);
+    const [agentResult, setAgentResult] = useState<AgentResponseClient | null>(null);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const { showNotification } = useNotification();
     const { setIsOpenLoader } = useLoader();
+    const coursesSectionRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        // Kiểm tra nếu mảng courses vừa có phần tử đầu tiên
+        if (agentResult) {
+            // Đặt một timeout nhỏ (khoảng 100ms) để đợi React render xong DOM của phần tử mới
+            const timer = setTimeout(() => {
+                coursesSectionRef.current?.scrollIntoView({
+                    behavior: 'smooth', // Cuộn mượt mà
+                    block: 'start',     // Đưa đỉnh của section lên đầu màn hình
+                });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [agentResult]); // Lắng nghe sự thay đổi về số lượng khóa học
     // ── Form ─────────────────────────────────────────────────────────────
     const {
         register,
@@ -201,36 +216,64 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
     const onAnalyze = async (form: JobForm) => {
         if (!selectedSourceId) return;
         setIsAnalyzing(true);
-        setAgentResult(null);
-        setIsOpenLoader({ isOpen: true, title: 'Analyze the description takes some time, stay tuned!' });
+
+        setAgentResult(null)
+        const localAgentResult: AgentResponseClient = {
+            technical_requirements: '',
+            courses: [],
+            source_id: selectedSourceId,
+            summary: '',
+            steps_taken: '0',
+            user_id: user.id
+        };
         try {
-            const usageCheck = await checkIsValidUsage(user.id);
-            if (usageCheck.error) {
-                showNotification(usageCheck.error);
-                return;
-            }
-            const usage = await incrementSearchUsage(user.id);
-            if (usage.error) {
-                showNotification(usage.error);
-                return;
-            }
-            const result = await analyzeJobDescription({
-                job_description: form.job_description,
-                position: form.position,
-                source_id: selectedSourceId,
-                company_name: form.company_name,
-            });
-            setAgentResult(result);
-            setShowSaveModal(true); // ← mở modal ngay khi có kết quả
-            setIsAnalyzing(false);
-            setIsOpenLoader({ isOpen: false })
-            showNotification('Analyze the job description successfully')
+            // Gọi hàm Axios Streaming vừa viết ở trên
+            await analyzeJobDescriptionStreamingAxios(
+                {
+                    job_description: form.job_description,
+                    position: form.position,
+                    source_id: selectedSourceId,
+                    company_name: form.company_name,
+                },
+                (type, data) => {
+                    console.log(type, data)
+                    // Nhận từng mảnh data từ server đổ về
+                    if (type === 'requirements') {
+                        const chunk = data as string;
+                        localAgentResult.technical_requirements = chunk
+                        setAgentResult(localAgentResult)
+                    }
+                    else if (type === 'course') {
+                        const chunk = data as CourseAgentResponse;
+
+
+                        // 2. Cập nhật đồng bộ vào trong object agentResult
+                        localAgentResult.courses.push(chunk)
+                        setAgentResult(localAgentResult)
+                    }
+                    else if (type === 'done') {
+                        const chunk = data as DoneResponse;
+                        setIsAnalyzing(false);
+                        showNotification(chunk.summary);
+                        setTimeout(() => {
+                            setShowSaveModal(true);
+                        }, 5000); // 5000ms = 5 giây
+
+                    }
+                    else if (type === 'error') {
+                        const chunk = data as ErrorChunk;
+                        setIsAnalyzing(false);
+                        throw new Error(chunk.data);
+                    }
+
+                }
+            );
         } catch (err) {
-            setIsOpenLoader({ isOpen: false })
+            setIsAnalyzing(false);
             showNotification(err instanceof Error ? err.message : "Analysis failed.");
         }
     };
-
+    console.log(agentResult)
     // ── Render ───────────────────────────────────────────────────────────
     return (
         <div className="dashboard-page">
@@ -279,7 +322,7 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                                 <tbody>
                                     {courses.map((course) => (
                                         <tr key={course.id ?? course.code}>
-                                            <td className="dashboard-table-name">{course.name}</td>
+                                            <td className="dashboard-table-name">{course.name ?? "-"}</td>
                                             <td>{course.code ?? "—"}</td>
                                             <td>{course.credits ?? "—"}</td>
                                             <td className="dashboard-table-desc">
@@ -431,14 +474,16 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
 
             {/* ── Analysis Results ────────────────────────────────────────── */}
             <AnimatePresence>
-                {agentResult && (
+                {(agentResult) && (
                     <motion.section
                         className="dashboard-card dashboard-results"
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 24 }}
                         transition={{ duration: 0.35, ease: "easeOut" }}
+                        ref={coursesSectionRef}
                     >
+                        {/* kết quả tiêu đề đầu trang */}
                         <div className="dashboard-results-header">
                             <h2 className="dashboard-section-title">
                                 <CheckCircle fontSize="small" className="dashboard-section-icon dashboard-section-icon-green" />
@@ -447,64 +492,100 @@ export default function DashboardClient({ user, initialSources }: DashboardClien
                             <span className="dashboard-relevance-badge">Top Relevance</span>
                         </div>
 
-                        {/* Technical requirements summary */}
-                        {agentResult.technical_requirements && (
-                            <div className="dashboard-requirements">
-                                <p className="dashboard-requirements-label">Technical Requirements Identified</p>
-                                <p className="dashboard-requirements-text">
-                                    {agentResult.technical_requirements}
-                                </p>
-                            </div>
-                        )}
+                        {/* ──────── PHẦN 1: TECHNICAL REQUIREMENTS ──────── */}
+                        <div className="dashboard-requirements">
+                            <p className="dashboard-requirements-label">Technical Requirements Identified</p>
 
-                        {/* Matched courses grid */}
-                        {agentResult.courses.length === 0 ? (
-                            <p className="dashboard-table-empty">No matching courses found.</p>
-                        ) : (
-                            <div className="dashboard-results-grid">
-                                {agentResult.courses.map((course, i) => (
-                                    <motion.div
-                                        key={course.code ?? i}
-                                        className="dashboard-result-card"
-                                        initial={{ opacity: 0, y: 16 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.07, duration: 0.3 }}
+                            <AnimatePresence mode="wait">
+                                {agentResult?.technical_requirements ? (
+                                    <motion.p
+                                        key="req-content"
+                                        className="dashboard-requirements-text"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
                                     >
-                                        {/* Score */}
-                                        <div className="dashboard-result-header">
-                                            <span className="dashboard-result-score-label">Match Score</span>
-                                            <span className="dashboard-result-score">
-                                                {course.similarity ?? "—"}%
-                                            </span>
-                                        </div>
-
-                                        {/* Course info */}
-                                        <p className="dashboard-result-name">{course.name}</p>
-                                        <p className="dashboard-result-desc">
-                                            {course.description ?? course.learning_outcomes ?? ""}
-                                        </p>
-
-                                        {/* Footer */}
-                                        <div className="dashboard-result-footer">
-                                            <span className="dashboard-result-tag">
-                                                {course.study_option ?? course.programme ?? "Course"}
-                                            </span>
-                                            {course.url && (
-                                                <a
-                                                    href={course.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="dashboard-result-link"
-                                                >
-                                                    <OpenInNew fontSize="inherit" />
-                                                </a>
-                                            )}
-                                        </div>
+                                        {agentResult?.technical_requirements}
+                                    </motion.p>
+                                ) : (
+                                    <motion.div key="req-loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                        <ComponentLoader sizeClassName="w-10 h-10" label="Extracting technical requirements..." />
                                     </motion.div>
-                                ))}
+                                )}
+                            </AnimatePresence>
+                        </div>
 
-                            </div>
-                        )}
+                        <div className="my-3 border-t border-[#d6edf5]" />
+
+                        {/* ──────── PHẦN 2: MATCHED COURSES GRID ──────── */}
+                        <div className="dashboard-courses-section">
+                            <p className="dashboard-requirements-label">Recommended Academic Courses</p>
+
+                            <AnimatePresence mode="wait">
+                                {/* Trường hợp 1: Đang chạy phân tích chuyên sâu nhưng chưa lấy được danh sách học phần */}
+                                {isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
+                                    <motion.div key="grid-loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                        <ComponentLoader sizeClassName="w-16 h-16" label="Querying vector database & compiling matches..." />
+                                    </motion.div>
+                                ) : // Trường hợp 2: Hệ thống chạy xong xuôi hoàn toàn (Done) nhưng không có kết quả phù hợp
+                                    !isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
+                                        <motion.p key="grid-empty" className="dashboard-table-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                            No matching courses found.
+                                        </motion.p>
+                                    ) : (
+                                        // Trường hợp 3: Đã nhận được danh sách học phần
+                                        <motion.div
+                                            key="grid-content"
+                                            className="dashboard-results-grid"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            {agentResult?.courses.map((course, i) => (
+                                                <motion.div
+                                                    key={course.code ?? course.id ?? i}
+                                                    className="border border-[#d6edf5] rounded-2xl bg-[#fafeff] p-3.5 flex flex-col gap-2 hover:shadow-[0_4px_16px_rgba(125,216,204,0.18)] transition-shadow cursor-pointer min-w-0 w-full overflow-hidden"
+                                                    initial={{ opacity: 0, y: 16 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: i * 0.05, duration: 0.3 }}
+                                                >
+                                                    <div className="flex items-start justify-between gap-2 min-w-0">
+                                                        <span className="text-[10px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
+                                                            Match Score
+                                                        </span>
+                                                        <span className="text-xl font-extrabold text-[#1a5c55] leading-none shrink-0">
+                                                            {Math.round(course.similarity)}%
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="text-sm font-bold text-[#1a2e35] leading-tight break-words min-w-0">
+                                                        {course.name}
+                                                    </p>
+
+                                                    <p className="text-xs text-[#6b9daa] leading-relaxed flex-1 break-words min-w-0">
+                                                        {course.explanation}
+                                                    </p>
+
+                                                    <div className="flex items-center justify-between mt-auto pt-1 gap-2 min-w-0">
+                                                        <span className="text-[11px] font-semibold text-[#4a7a85] bg-[#e8f4f8] px-2.5 py-1 rounded-full truncate min-w-0 flex-1">
+                                                            {course.study_option || course.programme || "Course"}
+                                                        </span>
+                                                        {course.url && (
+                                                            <a
+                                                                href={course.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="text-[#7dd8cc] hover:text-[#1a5c55] transition-colors shrink-0"
+                                                            >
+                                                                <OpenInNew sx={{ fontSize: 14 }} />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                            </AnimatePresence>
+                        </div>
                     </motion.section>
                 )}
             </AnimatePresence>

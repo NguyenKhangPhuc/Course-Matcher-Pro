@@ -12,11 +12,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  History as HistoryIcon,
   ExpandMore,
   Delete,
   OpenInNew,
-  CalendarToday,
 } from "@mui/icons-material";
 import type { User } from "@supabase/supabase-js";
 import { SearchHistoryWithMatches } from "../types/search_history";
@@ -25,7 +23,7 @@ import { deleteSearchHistoryById } from "../actions/search_history";
 import { DynamicModal } from "../dashboard/SaveSearchModal";
 import { useLoader } from "../context/LoaderContext";
 
-
+import HistoryIcon from '@mui/icons-material/History';
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -101,7 +99,7 @@ export default function HistoryClient({ user, searchHistoryWithMatches }: Histor
   }
 
   return (
-    <div className="flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-4 sm:px-6 lg:px-9 py-5 sm:py-8 flex flex-col gap-5 sm:gap-7 overflow-y-auto overflow-x-hidden">
+    <div className=" flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-4 sm:px-6 lg:px-9 py-5 sm:py-8 flex flex-col gap-5 sm:gap-7 overflow-y-auto overflow-x-hidden">
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#1a3a8f] shrink-0">

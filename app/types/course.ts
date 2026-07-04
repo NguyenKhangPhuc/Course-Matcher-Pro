@@ -6,4 +6,5 @@ export type CourseInsert = Database["public"]["Tables"]["courses"]["Insert"]
 
 export interface CourseAgentResponse extends CourseInsert {
     similarity: number,
+    explanation: string,
 }

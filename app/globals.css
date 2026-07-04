@@ -254,7 +254,7 @@ hboard · CSS
 .dashboard-page {
   flex: 1;
   min-height: 100vh;
-  background-color: #f0f7fa;
+  background-color: #4ad2ff;
   padding: 32px 36px;
   display: flex;
   flex-direction: column;
@@ -299,7 +299,7 @@ hboard · CSS
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   min-width: 0;
   overflow: hidden;
 }
@@ -684,9 +684,6 @@ hboard · CSS
 }
 
 /* ── Analysis results section ────────────────────────────────── */
-.dashboard-results {
-  gap: 20px;
-}
 
 .dashboard-results-header {
   display: flex;

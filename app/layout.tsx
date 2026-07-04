@@ -38,7 +38,7 @@ export default function RootLayout({
             <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
             <Loader/>
             <Notification/>
-            <main className="flex-1">    {/* flex-1 — tự lấp đầy phần còn lại */}
+            <main className="flex-1 md:mt-0 mt-10">    {/* flex-1 — tự lấp đầy phần còn lại */}
               {children}
             </main>
           </body>
