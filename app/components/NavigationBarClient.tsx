@@ -7,6 +7,7 @@ import { LayoutDashboard, History, HelpCircle, LogOut } from "lucide-react";
 import { createClient } from "../utils/supabase/client";
 import { signout } from "../actions/authentication";
 import { useNotification } from "../context/Notification";
+import Image from 'next/image'
 
 
 // =====================================================================
@@ -27,7 +28,12 @@ interface NavItem {
 // NAV ITEMS
 // =====================================================================
 
-const NAV_ITEMS: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
+  {
+    label: "Home",
+    href: "/",
+    icon: <LayoutDashboard size={18} strokeWidth={1.8} />,
+  },
   {
     label: "Dashboard",
     href: "/dashboard",
@@ -76,25 +82,16 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
     <aside className="nav-sidebar">
       {/* ── Brand ─────────────────────────────────────── */}
       <div className="nav-brand">
-        <div className="nav-brand-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-          </svg>
-        </div>
-        <div>
-          <p className="nav-brand-title">Course Matcher</p>
-          <p className="nav-brand-subtitle">Pro</p>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Course Matcher Pro logo"
+          width={30}
+          height={30}
+          className="object-contain"
+        />
+        <span className="nav-brand-title">
+          Course Matcher Pro
+        </span>
       </div>
 
       {/* ── Plan badge ────────────────────────────────── */}

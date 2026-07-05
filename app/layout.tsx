@@ -6,6 +6,7 @@ import { LoaderProvider } from "./context/LoaderContext";
 import { NotificationProvider } from "./context/Notification";
 import Loader from "./components/Loader";
 import { Notification } from "./components/Notification";
+import { Footer } from "./components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,16 +33,20 @@ export default function RootLayout({
       <NotificationProvider>
         <html
           lang="en"
-          className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} h-full antialiased `}
         >
-          <body className="flex min-h-screen">
+          <body className="flex min-h-screen flex-row">
             <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
-            <Loader/>
-            <Notification/>
-            <main className="flex-1 md:mt-0 mt-10">    {/* flex-1 — tự lấp đầy phần còn lại */}
-              {children}
+            <Loader />
+            <Notification />
+            <main className="flex-1 md:mt-0 mt-10 flex flex-col min-h-screen">
+              <div className="flex-1">
+                {children}
+              </div>
+              <Footer />
             </main>
           </body>
+
         </html>
       </NotificationProvider>
     </LoaderProvider>

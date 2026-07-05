@@ -8,7 +8,8 @@ import { LayoutDashboard, History, HelpCircle, LogOut, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { useNotification } from "../context/Notification";
 import { signout } from "../actions/authentication";
-
+import Image from 'next/image'
+import { NAV_ITEMS } from "./NavigationBarClient";
 // =====================================================================
 // TYPES & CONSTANTS
 // =====================================================================
@@ -16,11 +17,6 @@ import { signout } from "../actions/authentication";
 interface MobileNavigationBarProps {
     user: User | null;
 }
-
-const NAV_ITEMS = [
-    { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={18} strokeWidth={1.8} /> },
-    { label: "History", href: "/history", icon: <History size={18} strokeWidth={1.8} /> },
-];
 
 // =====================================================================
 // COMPONENT
@@ -56,17 +52,16 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
             <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-3 bg-[#e8f4f8] border-b border-[#c8e6ee] md:hidden">
                 {/* Brand */}
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#7dd8cc] flex items-center justify-center">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="#1a5c55" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-[#1a5c55] leading-none">Course Matcher</p>
-                        <p className="text-[10px] text-[#7aa5b0] leading-none mt-0.5">Pro</p>
-                    </div>
+                    <Image
+                        src="/logo.png"
+                        alt="Course Matcher Pro logo"
+                        width={30}
+                        height={30}
+                        className="object-contain"
+                    />
+                    <span className="text-xs font-bold text-[#1a2e35] uppercase tracking-[0.05em]">
+                        Course Matcher Pro
+                    </span>
                 </div>
 
                 {/* Hamburger button */}
@@ -145,17 +140,16 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
                     >
                         {/* Brand */}
                         <div className="flex items-center gap-2.5 px-2 mb-2">
-                            <div className="w-9 h-9 rounded-lg bg-[#7dd8cc] flex items-center justify-center shrink-0">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                    stroke="#1a5c55" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-[#1a5c55] leading-tight">Course Matcher</p>
-                                <p className="text-xs text-[#7aa5b0]">Pro</p>
-                            </div>
+                            <Image
+                                      src="/logo.png"
+                                      alt="Course Matcher Pro logo"
+                                      width={30}
+                                      height={30}
+                                      className="object-contain"
+                                    />
+                                    <span className="nav-brand-title">
+                                      Course Matcher Pro
+                                    </span>
                         </div>
 
                         {/* Plan badge */}
