@@ -86,6 +86,10 @@ export function HistoryItem({
                         <span className="font-semibold text-[#1a2e35]">Position: </span>
                         {item.position}
                     </p>
+                    {item.programme && <p className="text-xs font-medium text-[#1a5c55]">
+                        <span className="font-semibold text-[#1a2e35]">Programme: </span>
+                        {item.programme}
+                    </p>}
                     <p className="text-xs text-[#4a7a85]">
                         <span className="font-semibold text-[#1a2e35]">Requirements: </span>
                         {isExpanded

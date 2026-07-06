@@ -1,11 +1,13 @@
--- =====================
--- FUNCTION: match_courses
--- =====================
+-- 1. BẮT BUỘC: Xóa phiên bản cũ có cấu trúc tham số này trước
+DROP FUNCTION IF EXISTS match_courses(vector, uuid, integer, double precision);
+
+-- 2. TẠO LẠI HÀM MỚI VỚI CẤU TRÚC CHUẨN CỦA BẠN
 CREATE OR REPLACE FUNCTION match_courses(
-    query_embedding  VECTOR(1536),  -- Vector từ query đã embed
-    source_id        UUID,          -- Bắt buộc — chỉ search trong source này
+    query_embedding  VECTOR(1536),
+    source_id        UUID,
     match_count      INT     DEFAULT 10,
-    match_threshold  FLOAT   DEFAULT 0.5
+    match_threshold  FLOAT   DEFAULT 0.5,
+    filter_programme TEXT    DEFAULT NULL   -- NULL = không filter, lấy tất cả programme
 )
 RETURNS TABLE (
     id               UUID,
@@ -27,7 +29,7 @@ RETURNS TABLE (
     similarity       FLOAT
 )
 LANGUAGE SQL
-STABLE  -- Không modify data, cùng input → cùng output
+STABLE
 AS $$
     SELECT
         c.id,
@@ -46,21 +48,18 @@ AS $$
         c.instructor,
         c.url,
         c.timing,
-        -- Cosine similarity: 1 = identical, 0 = unrelated
         1 - (c.embedding <=> query_embedding) AS similarity
     FROM courses c
     WHERE
-        -- Bắt buộc: chỉ search trong đúng source_id được truyền vào
         c.source_id = match_courses.source_id
-        -- Chỉ lấy những course đủ relevant
         AND 1 - (c.embedding <=> query_embedding) > match_threshold
-        -- Không lấy course chưa có embedding
         AND c.embedding IS NOT NULL
+        AND (filter_programme IS NULL OR c.programme = filter_programme)
     ORDER BY
-        c.embedding <=> query_embedding ASC  -- ASC = gần nhất lên đầu
+        c.embedding <=> query_embedding ASC
     LIMIT match_count;
 $$;
 
--- Cho phép function chạy với anonymous users (RLS vẫn áp dụng)
+-- 3. CẤP LẠI QUYỀN TRUY CẬP
 GRANT EXECUTE ON FUNCTION match_courses TO authenticated;
 GRANT EXECUTE ON FUNCTION match_courses TO anon;

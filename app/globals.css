@@ -4,7 +4,9 @@
   --background: #ffffff;
   --foreground: #171717;
 }
-
+html {
+  scroll-behavior: smooth;
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -732,10 +734,9 @@ hboard · CSS
    ──────────────────────────────────────────────────────────── */
 .dashboard-results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
-
 @media (max-width: 1023px) {
   .dashboard-results-grid {
     grid-template-columns: repeat(2, 1fr);

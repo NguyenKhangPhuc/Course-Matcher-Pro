@@ -24,7 +24,15 @@ interface CourseMatchCardProps {
 export function CourseMatchCard({ match }: CourseMatchCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const course = match.courses;
-
+    console.log(match)
+    function formatDateRange(start?: string | null, end?: string | null): string {
+        console.log(start,end)
+        if (!start && !end) return "TBA";
+        const fmt = (d: string) =>
+            new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+        if (start && end) return `${fmt(start)} – ${fmt(end)}`;
+        return fmt(start || end!);
+    }
     /**
      * BEHAVIORAL MECHANISM:
      * Toggles the local expansion state of the course card, which controls whether
@@ -67,6 +75,24 @@ export function CourseMatchCard({ match }: CourseMatchCardProps) {
                     ? course.learning_outcomes
                     : `${course.learning_outcomes?.slice(0, 100)}...`}
             </p>
+            <div className="grid grid-cols-2 gap-2 min-w-0">
+                <div className="flex flex-col gap-0.5 min-w-0 bg-[#e8f4f8] rounded-xl px-2.5 py-1.5">
+                    <span className="text-[9px] font-semibold text-[#6b9daa] uppercase tracking-wide">
+                        Enrollment
+                    </span>
+                    <span className="text-[11px] font-semibold text-[#1a5c55] truncate">
+                        {formatDateRange(course.enrollment_start_date, course.enrollment_end_date)}
+                    </span>
+                </div>
+                <div className="flex flex-col gap-0.5 min-w-0 bg-[#e8f4f8] rounded-xl px-2.5 py-1.5">
+                    <span className="text-[9px] font-semibold text-[#6b9daa] uppercase tracking-wide">
+                        Course Period
+                    </span>
+                    <span className="text-[11px] font-semibold text-[#1a5c55] truncate">
+                        {formatDateRange(course.start_date, course.end_date)}
+                    </span>
+                </div>
+            </div>
 
             <div className="flex items-center justify-between mt-auto pt-1 gap-2 min-w-0">
                 <span className="text-[11px] font-semibold text-[#4a7a85] bg-[#e8f4f8] px-2.5 py-1 rounded-full truncate min-w-0 flex-1">

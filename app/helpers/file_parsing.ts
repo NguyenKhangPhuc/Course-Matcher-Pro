@@ -65,8 +65,7 @@ function safeStr(value: unknown): string {
 function deduplicateByCodes(courses: CourseInsert[]): CourseInsert[] {
   const seen = new Set<string>();
   return courses.filter((course) => {
-    const key = course.code?.trim();
-    if (!key) return true; // Không có code thì giữ lại
+    const key = `${course.code}__${course.programme}__${course.study_option}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

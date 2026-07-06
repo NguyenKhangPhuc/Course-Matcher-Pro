@@ -23,7 +23,7 @@ import { analyzeJobDescriptionStreamingAxios } from "../services/agent";
 import { AgentResponseClient, DoneResponse, ErrorChunk } from "../types/agent";
 import { CourseAgentResponse, CourseInsert } from "../types/course";
 import { useNotification } from "../context/Notification";
-import { getCoursesBySourceId } from "../actions/course";
+import { getCoursesBySourceId, getUniqueProgrammeBySourceId } from "../actions/course";
 import { createSearchHistoryAndMatches } from "../actions/search_history";
 import { SearchHistoryInsert } from "../types/search_history";
 import { SourceInsert } from "../types/source";
@@ -37,7 +37,8 @@ import { AnalysisResultsSection } from "./components/AnalysisResultsSection";
 export default function DashboardClient({ user, initialSources }: { user: User; initialSources: SourceInsert[] }) {
     const [sources, setSources] = useState<SourceInsert[]>(initialSources);
     const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
-    const [courses, setCourses] = useState<CourseInsert[]>([]);
+    const courses = useRef<CourseInsert[]>([]);
+    const [filterCouses, setFilterCourses] = useState<CourseInsert[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [agentResult, setAgentResult] = useState<AgentResponseClient | null>(null);
@@ -45,6 +46,8 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const { showNotification } = useNotification();
     const { setIsOpenLoader } = useLoader();
     const coursesSectionRef = useRef<HTMLDivElement>(null);
+    const [programmes, setProgrammes] = useState<string[]>([]);
+    const [selectedProgramme, setSelectedProgramme] = useState<string | null>(null);
 
     // Scroll to results section on new result stream start
     useEffect(() => {
@@ -81,20 +84,22 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const handleSelectSource = async (sourceId: string): Promise<void> => {
         setSelectedSourceId(sourceId);
         setAgentResult(null);
+        setSelectedProgramme(null); // reset filter khi đổi source
         setIsOpenLoader({ isOpen: true });
         try {
             const data = await getCoursesBySourceId(sourceId);
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            setCourses(data.data ?? []);
+            if (data.error) throw new Error(data.error);
+            courses.current = data.data ?? []
+            setFilterCourses(data.data ?? [])
+            const programmeResult = await getUniqueProgrammeBySourceId(sourceId);
+            if (programmeResult.error) throw new Error(programmeResult.error);
+            setProgrammes(programmeResult.data);
+
             setIsOpenLoader({ isOpen: false });
             showNotification("Load the courses successfully");
         } catch (err) {
             setIsOpenLoader({ isOpen: false });
-            if (err instanceof Error) {
-                showNotification(err.message);
-            }
+            if (err instanceof Error) showNotification(err.message);
         }
     };
 
@@ -125,12 +130,16 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                 }
 
                 setSelectedSourceId(result.source_id);
+                setSelectedProgramme(null);
 
                 const newCourses = await getCoursesBySourceId(result.source_id);
-                if (newCourses.error) {
-                    throw new Error(newCourses.error);
-                }
-                setCourses(newCourses.data!);
+                if (newCourses.error) throw new Error(newCourses.error);
+                courses.current = newCourses.data ?? []
+                setFilterCourses(newCourses.data ?? [])
+
+                const programmeResult = await getUniqueProgrammeBySourceId(result.source_id);
+                if (programmeResult.error) throw new Error(programmeResult.error);
+                setProgrammes(programmeResult.data);
 
                 setSources((prev) => [
                     {
@@ -177,6 +186,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                 technical_requirements: agentResult?.technical_requirements,
                 summary: agentResult!.summary,
                 source_id: agentResult!.source_id,
+                programme: selectedProgramme,
             };
 
             const result = await createSearchHistoryAndMatches(searchHistory, agentResult!.courses);
@@ -222,6 +232,10 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
      */
     const onAnalyze = async (form: JobForm): Promise<void> => {
         if (!selectedSourceId) return;
+        if (!selectedProgramme) {
+            showNotification('Please choose your programme')
+            return;
+        }
         setIsAnalyzing(true);
         setAgentResult(null);
 
@@ -232,6 +246,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             summary: "",
             steps_taken: "0",
             user_id: user.id,
+            programme: selectedProgramme
         };
 
         try {
@@ -241,8 +256,11 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     position: form.position,
                     source_id: selectedSourceId,
                     company_name: form.company_name,
+                    programme: selectedProgramme!,   // <-- thêm dòng này
+
                 },
                 (type, data) => {
+                    console.log(type, data)
                     if (type === "requirements") {
                         localAgentResult.technical_requirements = data as string;
                         setAgentResult({ ...localAgentResult });
@@ -259,7 +277,11 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     } else if (type === "error") {
                         const chunk = data as ErrorChunk;
                         setIsAnalyzing(false);
-                        throw new Error(chunk.data);
+
+                        // Fix: Gọi thẳng notification ở đây thay vì throw lỗi vô định
+                        showNotification(chunk.data || "Analysis failed.");
+                        console.error("Stream Error:", chunk.data);
+                        return;
                     }
                 }
             );
@@ -269,6 +291,22 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
         }
     };
 
+    const handleSelectProgramme = (chosenProgramme: string | null) => {
+        if (!chosenProgramme || chosenProgramme.length == 0) {
+            console.log(courses.current)
+            setFilterCourses(courses.current)
+            setSelectedProgramme(null)
+            return
+        }
+        const filtered = courses.current.filter((course) => {
+            return course.programme == chosenProgramme
+        })
+        setSelectedProgramme(chosenProgramme)
+        setFilterCourses(filtered)
+    }
+
+
+
     return (
         <div className="dashboard-page">
             <div className="dashboard-grid">
@@ -276,10 +314,13 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                 <CourseDataSection
                     sources={sources}
                     selectedSourceId={selectedSourceId}
-                    courses={courses}
+                    courses={filterCouses}
                     isUploading={isUploading}
                     onSelectSource={handleSelectSource}
                     onUploadFile={handleUploadFile}
+                    programmes={programmes}
+                    selectedProgramme={selectedProgramme}
+                    onSelectProgramme={handleSelectProgramme}
                 />
 
                 {/* RIGHT: Target Job */}

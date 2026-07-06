@@ -74,7 +74,11 @@ export async function getSearchHistoryWithMatches(userId: string) {
           credits,
           url,
           searchable_text,
-          created_at
+          created_at,
+          start_date,
+          end_date,
+          enrollment_start_date,
+          enrollment_end_date
         )
       )
     `)

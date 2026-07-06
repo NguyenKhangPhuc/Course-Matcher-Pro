@@ -32,3 +32,25 @@ export async function getCoursesBySourceId(sourceId: string) {
     }
     return { data, error }
 }
+
+export async function getUniqueProgrammeBySourceId(
+  sourceId: string
+): Promise<{ data: string[]; error: string | null }> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("courses")
+    .select("programme")
+    .eq("source_id", sourceId)
+    .not("programme", "is", null);
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  const unique = Array.from(
+    new Set((data ?? []).map((r) => r.programme).filter(Boolean))
+  ).sort();
+
+  return { data: unique, error: null };
+}

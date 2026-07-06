@@ -181,6 +181,7 @@ export type Database = {
           id: string
           job_description: string | null
           position: string
+          programme: string | null
           source_id: string
           summary: string | null
           technical_requirements: string | null
@@ -192,6 +193,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           position: string
+          programme?: string | null
           source_id: string
           summary?: string | null
           technical_requirements?: string | null
@@ -203,6 +205,7 @@ export type Database = {
           id?: string
           job_description?: string | null
           position?: string
+          programme?: string | null
           source_id?: string
           summary?: string | null
           technical_requirements?: string | null
@@ -329,6 +332,7 @@ export type Database = {
       increment_search_usage: { Args: { p_user_id: string }; Returns: boolean }
       match_courses: {
         Args: {
+          filter_programme?: string
           match_count?: number
           match_threshold?: number
           query_embedding: string

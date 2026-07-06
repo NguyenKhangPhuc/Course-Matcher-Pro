@@ -7,6 +7,7 @@ export interface AgentResponseClient {
     user_id: string,
     steps_taken: string,
     source_id: string,
+    programme: string,
 }
 
 export interface DoneResponse {

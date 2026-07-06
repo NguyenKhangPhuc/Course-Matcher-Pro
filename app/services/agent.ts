@@ -6,6 +6,7 @@ export interface ChatRequest {
     source_id: string;
     position: string;
     company_name?: string;
+    programme: string
 }
 
 export const analyzeJobDescriptionStreamingAxios = async (
@@ -25,6 +26,7 @@ export const analyzeJobDescriptionStreamingAxios = async (
             // Chỉ lấy phần dữ liệu mới trả về (bỏ qua phần dữ liệu cũ đã đọc)
             const chunk = rawResponse.substring(seenBytes);
             seenBytes = rawResponse.length;
+            
 
             // Xử lý chunk nhận được theo chuẩn SSE (\n\n)
             const lines = chunk.split('\n\n');
