@@ -20,6 +20,7 @@
 import React from "react";
 import { UseFormRegister, UseFormHandleSubmit, FieldErrors } from "react-hook-form";
 import { Shield } from "@mui/icons-material";
+import { motion } from "framer-motion";
 
 export interface JobForm {
     company_name: string;
@@ -57,78 +58,197 @@ export function TargetJobForm({
      * - React.ReactElement: The rendered target job form element.
      */
     return (
-        <section className="dashboard-card dashboard-card-job">
-            <h2 className="dashboard-section-title">
+        <motion.section
+            className="dashboard-card dashboard-card-job"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+            <motion.h2
+                className="dashboard-section-title"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+            >
                 <Shield fontSize="small" className="dashboard-section-icon" />
                 Target Job
-            </h2>
+            </motion.h2>
 
-            <form onSubmit={handleSubmit(onAnalyze)} className="dashboard-form">
+            <motion.form
+                onSubmit={handleSubmit(onAnalyze)}
+                className="dashboard-form"
+                initial="hidden"
+                animate="show"
+                variants={{
+                    hidden: {},
+                    show: {
+                        transition: {
+                            staggerChildren: 0.08,
+                        },
+                    },
+                }}
+            >
                 {/* Company name */}
-                <div className="dashboard-field">
+                <motion.div
+                    className="dashboard-field"
+                    variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        show: { opacity: 1, y: 0 },
+                    }}
+                >
                     <label className="dashboard-label">Company Name</label>
-                    <input
-                        {...register("company_name", { required: "Company name is required" })}
+
+                    <motion.input
+                        {...register("company_name", {
+                            required: "Company name is required",
+                        })}
                         className="dashboard-input"
                         placeholder="e.g. Google, TechCorp Inc."
+                        whileFocus={{
+                            scale: 1.01,
+                        }}
+                        transition={{ duration: 0.15 }}
                     />
+
                     {errors.company_name && (
-                        <p className="text-red-500 text-xs mt-1">
+                        <motion.p
+                            className="text-red-500 text-xs mt-1"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
                             {errors.company_name.message}
-                        </p>
+                        </motion.p>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Position */}
-                <div className="dashboard-field">
+                <motion.div
+                    className="dashboard-field"
+                    variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        show: { opacity: 1, y: 0 },
+                    }}
+                >
                     <label className="dashboard-label">Position</label>
-                    <input
-                        {...register("position", { required: "Position is required" })}
+
+                    <motion.input
+                        {...register("position", {
+                            required: "Position is required",
+                        })}
                         className="dashboard-input"
                         placeholder="e.g. AI developer"
+                        whileFocus={{
+                            scale: 1.01,
+                        }}
+                        transition={{ duration: 0.15 }}
                     />
+
                     {errors.position && (
-                        <p className="text-red-500 text-xs mt-1">
+                        <motion.p
+                            className="text-red-500 text-xs mt-1"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
                             {errors.position.message}
-                        </p>
+                        </motion.p>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Job description */}
-                <div className="dashboard-field">
-                    <label className="dashboard-label">Job Description</label>
-                    <textarea
+                <motion.div
+                    className="dashboard-field"
+                    variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        show: { opacity: 1, y: 0 },
+                    }}
+                >
+                    <label className="dashboard-label">
+                        Job Description
+                    </label>
+
+                    <motion.textarea
                         {...register("job_description", {
                             required: "Job description is required",
-                            minLength: { value: 30, message: "Please provide more detail (min 30 chars)" },
+                            minLength: {
+                                value: 30,
+                                message:
+                                    "Please provide more detail (min 30 chars)",
+                            },
                         })}
                         className="dashboard-textarea"
                         placeholder="Paste the job requirements, responsibilities, and qualifications here..."
                         rows={8}
+                        whileFocus={{
+                            scale: 1.01,
+                        }}
+                        transition={{ duration: 0.15 }}
                     />
+
                     {errors.job_description && (
-                        <p className="text-red-500 text-xs mt-1">
+                        <motion.p
+                            className="text-red-500 text-xs mt-1"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
                             {errors.job_description.message}
-                        </p>
+                        </motion.p>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Analyze button */}
-                <button
+                <motion.button
                     type="submit"
                     disabled={!selectedSourceId || isAnalyzing}
                     className="dashboard-analyze-btn"
+                    whileHover={
+                        !isAnalyzing && selectedSourceId
+                            ? { scale: 1.03 }
+                            : {}
+                    }
+                    whileTap={
+                        !isAnalyzing && selectedSourceId
+                            ? { scale: 0.97 }
+                            : {}
+                    }
+                    animate={
+                        isAnalyzing
+                            ? {
+                                opacity: [0.7, 1, 0.7],
+                            }
+                            : {}
+                    }
+                    transition={
+                        isAnalyzing
+                            ? {
+                                repeat: Infinity,
+                                duration: 1.2,
+                            }
+                            : {
+                                duration: 0.15,
+                            }
+                    }
                 >
                     {isAnalyzing ? (
                         "Analyzing..."
                     ) : (
                         <>
                             Start Analyze Description
-                            <span className="dashboard-analyze-arrow">→</span>
+                            <motion.span
+                                className="dashboard-analyze-arrow"
+                                animate={{
+                                    x: [0, 5, 0],
+                                }}
+                                transition={{
+                                    repeat: Infinity,
+                                    duration: 1,
+                                }}
+                            >
+                                →
+                            </motion.span>
                         </>
                     )}
-                </button>
-            </form>
-        </section>
+                </motion.button>
+            </motion.form>
+        </motion.section>
     );
 }

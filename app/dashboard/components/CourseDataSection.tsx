@@ -138,30 +138,60 @@ export function CourseDataSection({
     }, []);
 
     return (
-        <section className="dashboard-card">
-            <h2 className="dashboard-section-title">
+        <motion.section
+            className="dashboard-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+            <motion.h2
+                className="dashboard-section-title"
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+            >
                 <TableChart fontSize="small" className="dashboard-section-icon" />
                 Course Data
-            </h2>
+            </motion.h2>
 
             {/* Source pills */}
             {sources.length > 0 && (
-                <div className="dashboard-source-pills">
+                <motion.div
+                    className="dashboard-source-pills"
+                    initial="hidden"
+                    animate="show"
+                    variants={{
+                        hidden: {},
+                        show: {
+                            transition: {
+                                staggerChildren: 0.05,
+                            },
+                        },
+                    }}
+                >
                     {sources.map((src) => (
-                        <button
+                        <motion.button
                             key={src.id}
                             onClick={() => onSelectSource(src.id!)}
                             className={`dashboard-pill ${selectedSourceId === src.id
-                                ? "dashboard-pill-active"
-                                : "dashboard-pill-inactive"
+                                    ? "dashboard-pill-active"
+                                    : "dashboard-pill-inactive"
                                 }`}
+                            variants={{
+                                hidden: { opacity: 0, y: -8 },
+                                show: { opacity: 1, y: 0 },
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ duration: 0.2 }}
                         >
                             {src.is_default ? "⭐ " : ""}
                             {src.name}
-                        </button>
+                        </motion.button>
                     ))}
-                </div>
+                </motion.div>
             )}
+
             {programmes.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
@@ -182,25 +212,27 @@ export function CourseDataSection({
                         whileFocus={{ scale: 1.03 }}
                         value={selectedProgramme ?? ""}
                         onChange={(e) =>
-                            onSelectProgramme(e.target.value === "" ? null : e.target.value)
+                            onSelectProgramme(
+                                e.target.value === "" ? null : e.target.value
+                            )
                         }
                         className="
-                    w-full
-                    sm:w-auto
-                    sm:max-w-[220px]
-                    text-[12px]
-                    font-semibold
-                    text-[#1a5c55]
-                    bg-[#e8f4f8]
-                    border
-                    border-[#d6edf5]
-                    rounded-full
-                    px-3
-                    py-1.5
-                    outline-none
-                    cursor-pointer
-                    hover:bg-[#d6edf5]
-                    transition-colors
+                        w-full
+                        sm:w-auto
+                        sm:max-w-[220px]
+                        text-[12px]
+                        font-semibold
+                        text-[#1a5c55]
+                        bg-[#e8f4f8]
+                        border
+                        border-[#d6edf5]
+                        rounded-full
+                        px-3
+                        py-1.5
+                        outline-none
+                        cursor-pointer
+                        hover:bg-[#d6edf5]
+                        transition-colors
                     "
                     >
                         <option value="">Choose your programme</option>
@@ -211,53 +243,85 @@ export function CourseDataSection({
                         ))}
                     </motion.select>
                 </motion.div>
-            )
-            }
+            )}
+
             {/* Course table */}
-            {
-                courses.length > 0 ? (
-                    <div className="dashboard-table-wrap">
-                        <table className="dashboard-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Code</th>
-                                    <th>Credits</th>
-                                    <th>Learning outcomes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {courses.map((course) => (
-                                    <tr key={course.id ?? course.code}>
-                                        <td className="dashboard-table-name">{course.title ?? "-"}</td>
-                                        <td>{course.code ?? "—"}</td>
-                                        <td>{course.credits ?? "—"}</td>
-                                        <td className="dashboard-table-desc">
-                                            {course.learning_outcomes && course.learning_outcomes.length > 0
-                                                ? course.learning_outcomes.slice(0, 70)
-                                                : "-"}
-                                            ......
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className="dashboard-table-empty">
-                        Select a source above or upload a file to see courses.
-                    </p>
-                )
-            }
+            {courses.length > 0 ? (
+                <motion.div
+                    className="dashboard-table-wrap"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <table className="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Credits</th>
+                                <th>Learning outcomes</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {courses.map((course, index) => (
+                                <motion.tr
+                                    key={course.id ?? course.code}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{
+                                        duration: 0.2,
+                                        delay: index * 0.03,
+                                    }}
+                                    whileHover={{
+                                        backgroundColor: "rgba(0,0,0,0.02)",
+                                    }}
+                                >
+                                    <td className="dashboard-table-name">
+                                        {course.title ?? "-"}
+                                    </td>
+
+                                    <td>{course.code ?? "—"}</td>
+
+                                    <td>{course.credits ?? "—"}</td>
+
+                                    <td className="dashboard-table-desc">
+                                        {course.learning_outcomes &&
+                                            course.learning_outcomes.length > 0
+                                            ? course.learning_outcomes.slice(0, 70)
+                                            : "-"}
+                                        ......
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </motion.div>
+            ) : (
+                <motion.p
+                    className="dashboard-table-empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                >
+                    Select a source above or upload a file to see courses.
+                </motion.p>
+            )}
 
             {/* Drop zone */}
-            <div
-                className={`dashboard-dropzone ${isDragging ? "dashboard-dropzone-active" : ""} ${isUploading ? "dashboard-dropzone-loading" : ""
-                    }`}
+            <motion.div
+                className={`dashboard-dropzone ${isDragging ? "dashboard-dropzone-active" : ""
+                    } ${isUploading ? "dashboard-dropzone-loading" : ""}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={handleDropzoneClick}
+                animate={{
+                    scale: isDragging ? 1.02 : 1,
+                }}
+                whileHover={{
+                    scale: isUploading ? 1 : 1.01,
+                }}
+                transition={{ duration: 0.2 }}
             >
                 <input
                     id="file-input"
@@ -266,44 +330,103 @@ export function CourseDataSection({
                     className="hidden"
                     onChange={handleInputChange}
                 />
+
                 {isUploading ? (
-                    <span className="dashboard-dropzone-text">Uploading...</span>
+                    <motion.span
+                        className="dashboard-dropzone-text"
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{
+                            repeat: Infinity,
+                            duration: 1.2,
+                        }}
+                    >
+                        Uploading...
+                    </motion.span>
                 ) : (
                     <>
-                        <CloudUpload className="dashboard-dropzone-icon" />
+                        <motion.div
+                            animate={
+                                isDragging
+                                    ? {
+                                        y: [0, -6, 0],
+                                    }
+                                    : {}
+                            }
+                            transition={{
+                                repeat: Infinity,
+                                duration: 0.8,
+                            }}
+                        >
+                            <CloudUpload className="dashboard-dropzone-icon" />
+                        </motion.div>
+
                         <span className="dashboard-dropzone-text">
-                            {isDragging ? "Drop to upload" : "Drag and drop file here"}
+                            {isDragging
+                                ? "Drop to upload"
+                                : "Drag and drop file here"}
                         </span>
+
                         <span className="dashboard-dropzone-sub">
                             Support for <strong>Excel</strong>, <strong>CSV</strong>,{" "}
                             <strong>JSON</strong> files
                         </span>
                     </>
                 )}
-            </div>
+            </motion.div>
 
             {/* Example format badges */}
-            <div className="dashboard-examples">
-                <span className="dashboard-examples-label">EXAMPLE FORMATS</span>
+            <motion.div
+                className="dashboard-examples"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+            >
+                <span className="dashboard-examples-label">
+                    EXAMPLE FORMATS
+                </span>
+
                 {(
                     [
-                        { label: "Excel", file: "courses_example.xlsx" },
-                        { label: "CSV", file: "courses_example.csv" },
-                        { label: "JSON", file: "courses_example.json" },
+                        {
+                            label: "Excel",
+                            file: "courses_example.xlsx",
+                        },
+                        {
+                            label: "CSV",
+                            file: "courses_example.csv",
+                        },
+                        {
+                            label: "JSON",
+                            file: "courses_example.json",
+                        },
                     ] as const
-                ).map(({ label, file }) => (
-                    <a
+                ).map(({ label, file }, index) => (
+                    <motion.a
                         key={label}
                         href={`/examples/${file}`}
                         download={file}
                         className="dashboard-example-badge"
-                        style={{ textDecoration: "none", cursor: "pointer" }}
+                        style={{
+                            textDecoration: "none",
+                            cursor: "pointer",
+                        }}
                         title={`Download ${label} example`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                            delay: index * 0.05,
+                        }}
+                        whileHover={{
+                            scale: 1.08,
+                        }}
+                        whileTap={{
+                            scale: 0.95,
+                        }}
                     >
                         {label}
-                    </a>
+                    </motion.a>
                 ))}
-            </div>
-        </section >
+            </motion.div>
+        </motion.section>
     );
 }
