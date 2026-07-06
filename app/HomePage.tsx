@@ -1,59 +1,123 @@
+'use client'
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0 },
+};
+
+const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+};
+
+const container = {
+    hidden: {},
+    visible: {
+        transition: {
+            staggerChildren: 0.12,
+        },
+    },
+};
 
 function HeroSection() {
     return (
-        <section className=" grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center px-5 py-12 xl:p-20 lg:p-10 p-5 max-w-7xl mx-auto w-full">
+        <motion.section
+            initial="hidden"
+            animate="visible"
+            variants={container}
+            className=" grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center px-5 py-12 xl:p-20 lg:p-10 p-5 max-w-7xl mx-auto w-full"
+        >
             {/* ── Left column: copy ── */}
-            <div className="flex flex-col items-start">
-                <span className="inline-flex items-center self-start gap-1.5 text-[11px] font-bold tracking-[0.1em] uppercase text-[#1a5c55] bg-[#e8faf8] border border-[#7dd8cc] rounded-full px-3.5 py-1 mb-5">
+            <motion.div
+                variants={container}
+                className="flex flex-col items-start"
+            >
+                <motion.span
+                    variants={fadeUp}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="inline-flex items-center self-start gap-1.5 text-[11px] font-bold tracking-[0.1em] uppercase text-[#1a5c55] bg-[#e8faf8] border border-[#7dd8cc] rounded-full px-3.5 py-1 mb-5"
+                >
                     Academic Distinction
-                </span>
+                </motion.span>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-[58px] font-extrabold text-[#1a2e35] leading-[1.05] tracking-[-0.02em] mb-4">
+                <motion.h1
+                    variants={fadeUp}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-4xl sm:text-5xl lg:text-[58px] font-extrabold text-[#1a2e35] leading-[1.05] tracking-[-0.02em] mb-4"
+                >
                     Course Matcher<br />Pro
-                </h1>
+                </motion.h1>
 
-                <p className="text-base sm:text-lg font-semibold text-[#1a5c55] leading-snug mb-4">
+                <motion.p
+                    variants={fadeUp}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-base sm:text-lg font-semibold text-[#1a5c55] leading-snug mb-4"
+                >
                     Find your suitable course with only one click.
-                </p>
+                </motion.p>
 
-                <p className="text-sm sm:text-[15px] text-[#6b9daa] leading-relaxed max-w-[480px] mb-8">
+                <motion.p
+                    variants={fadeUp}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-sm sm:text-[15px] text-[#6b9daa] leading-relaxed max-w-[480px] mb-8"
+                >
                     A platform built to help students discover courses that align with
                     real-world job requirements — using data from their university or
                     custom files they upload (Excel, CSV, JSON). Powered by semantic
                     search and AI analysis, so every match is grounded in actual
                     course content, not just keywords.
-                </p>
+                </motion.p>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <Link
-                        href="/dashboard"
-                        className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-[#1a2e35] text-white rounded-xl text-sm font-bold tracking-[0.01em] no-underline transition-colors hover:bg-[#1a5c55] w-full sm:w-auto"
-                    >
-                        Get started →
-                    </Link>
-                    <Link
-                        href="#features"
-                        className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-transparent text-[#1a2e35] border border-[#d6edf5] rounded-xl text-sm font-semibold no-underline transition-colors hover:border-[#7dd8cc] hover:text-[#1a5c55] w-full sm:w-auto"
-                    >
-                        See how it works
-                    </Link>
-                </div>
-            </div>
+                <motion.div
+                    variants={fadeUp}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto"
+                >
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-[#1a2e35] text-white rounded-xl text-sm font-bold tracking-[0.01em] no-underline transition-colors hover:bg-[#1a5c55] w-full sm:w-auto"
+                        >
+                            Get started →
+                        </Link>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
+                        <Link
+                            href="#features"
+                            className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-transparent text-[#1a2e35] border border-[#d6edf5] rounded-xl text-sm font-semibold no-underline transition-colors hover:border-[#7dd8cc] hover:text-[#1a5c55] w-full sm:w-auto"
+                        >
+                            See how it works
+                        </Link>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
 
             {/* ── Right column: logo ── */}
-            <div className="flex items-center justify-center mt-4 lg:mt-0">
-                <Image
-                    src="/logo.png"
-                    alt="Course Matcher Pro logo"
-                    width={420}
-                    height={420}
-                    priority
-                    className="w-48 sm:w-64 lg:w-56 lg:w-96 h-auto object-contain drop-shadow-[0_12px_32px_rgba(125,216,204,0.2)]"
-                />
-            </div>
-        </section>
+            <motion.div
+                variants={fadeIn}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+                className="flex items-center justify-center mt-4 lg:mt-0"
+            >
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                    whileHover={{ scale: 1.04 }}
+                >
+                    <Image
+                        src="/logo.png"
+                        alt="Course Matcher Pro logo"
+                        width={420}
+                        height={420}
+                        priority
+                        className="w-48 sm:w-64 lg:w-56 lg:w-96 h-auto object-contain drop-shadow-[0_12px_32px_rgba(125,216,204,0.2)]"
+                    />
+                </motion.div>
+            </motion.div>
+        </motion.section>
     );
 }
 
@@ -62,7 +126,14 @@ function FeatureGrid() {
         <section id="features" className="flex flex-col gap-4 lg:gap-6 px-5 pb-16 lg:pb-20 lg:px-20 max-w-7xl mx-auto w-full">
 
             {/* ── Row 1: Dashboard screenshot | Dashboard text ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-[#d6edf5] rounded-2xl overflow-hidden min-h-[280px] lg:min-h-[340px]">
+            <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.25 }}
+                variants={fadeUp}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-[#d6edf5] rounded-2xl overflow-hidden min-h-[280px] lg:min-h-[340px]"
+            >
                 {/* Image — top on mobile, left on desktop */}
                 <div className="relative h-52 sm:h-64 lg:h-auto bg-[#e8f4f8] overflow-hidden">
                     <Image
@@ -92,10 +163,17 @@ function FeatureGrid() {
                         match scores and plain-language explanations.
                     </p>
                 </div>
-            </div>
+            </motion.div>
 
             {/* ── Row 2: History text | History screenshot ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-[#d6edf5] rounded-2xl overflow-hidden min-h-[280px] lg:min-h-[340px]">
+            <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.25 }}
+                variants={fadeUp}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-[#d6edf5] rounded-2xl overflow-hidden min-h-[280px] lg:min-h-[340px]"
+            >
                 {/* Image — top on mobile (order-first), right on desktop (order-last) */}
                 <div className="relative h-52 sm:h-64 lg:h-auto bg-[#e8f4f8] overflow-hidden order-first lg:order-last">
                     <Image
@@ -126,7 +204,7 @@ function FeatureGrid() {
                         organised view.
                     </p>
                 </div>
-            </div>
+            </motion.div>
         </section>
     );
 }
