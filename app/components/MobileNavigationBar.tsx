@@ -141,15 +141,15 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
                         {/* Brand */}
                         <div className="flex items-center gap-2.5 px-2 mb-2">
                             <Image
-                                      src="/logo.png"
-                                      alt="Course Matcher Pro logo"
-                                      width={30}
-                                      height={30}
-                                      className="object-contain"
-                                    />
-                                    <span className="nav-brand-title">
-                                      Course Matcher Pro
-                                    </span>
+                                src="/logo.png"
+                                alt="Course Matcher Pro logo"
+                                width={30}
+                                height={30}
+                                className="object-contain"
+                            />
+                            <span className="nav-brand-title">
+                                Course Matcher Pro
+                            </span>
                         </div>
 
                         {/* Plan badge */}

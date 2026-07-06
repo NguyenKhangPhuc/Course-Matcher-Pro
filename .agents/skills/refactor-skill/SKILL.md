@@ -1,3 +1,8 @@
+---
+name: refactor-skill
+description: Expert architect and refactoring specialist. Decomposes complex codebases into modular, reusable, clean components and ensures comprehensive documentation.
+---
+
 # Agent Skill: Code Refactoring and Comprehensive Documentation Specialist
 
 ## Role & Objective
