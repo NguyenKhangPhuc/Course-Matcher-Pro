@@ -44,6 +44,9 @@ export type Database = {
           degree_type: string | null
           description: string | null
           embedding: string | null
+          end_date: string | null
+          enrollment_end_date: string | null
+          enrollment_start_date: string | null
           id: string
           instructor: string | null
           learning_outcomes: string | null
@@ -52,6 +55,7 @@ export type Database = {
           programme: string | null
           searchable_text: string | null
           source_id: string
+          start_date: string | null
           study_option: string | null
           timing: Json | null
           title: string | null
@@ -66,6 +70,9 @@ export type Database = {
           degree_type?: string | null
           description?: string | null
           embedding?: string | null
+          end_date?: string | null
+          enrollment_end_date?: string | null
+          enrollment_start_date?: string | null
           id?: string
           instructor?: string | null
           learning_outcomes?: string | null
@@ -74,6 +81,7 @@ export type Database = {
           programme?: string | null
           searchable_text?: string | null
           source_id: string
+          start_date?: string | null
           study_option?: string | null
           timing?: Json | null
           title?: string | null
@@ -88,6 +96,9 @@ export type Database = {
           degree_type?: string | null
           description?: string | null
           embedding?: string | null
+          end_date?: string | null
+          enrollment_end_date?: string | null
+          enrollment_start_date?: string | null
           id?: string
           instructor?: string | null
           learning_outcomes?: string | null
@@ -96,6 +107,7 @@ export type Database = {
           programme?: string | null
           searchable_text?: string | null
           source_id?: string
+          start_date?: string | null
           study_option?: string | null
           timing?: Json | null
           title?: string | null

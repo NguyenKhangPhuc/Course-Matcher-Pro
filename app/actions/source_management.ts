@@ -289,6 +289,10 @@ async function batchInsertCourses(
     timing: row.timing,
     searchable_text: row.searchable_text,
     embedding: row.embedding,
+    start_date: row.start_date || null,
+    end_date: row.end_date || null,
+    enrollment_start_date: row.enrollment_start_date || null,
+    enrollment_end_date: row.enrollment_end_date || null,
   }));
 
   // Chia thành batches

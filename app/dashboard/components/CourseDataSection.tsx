@@ -172,7 +172,7 @@ export function CourseDataSection({
                         <tbody>
                             {courses.map((course) => (
                                 <tr key={course.id ?? course.code}>
-                                    <td className="dashboard-table-name">{course.name ?? "-"}</td>
+                                    <td className="dashboard-table-name">{course.title ?? "-"}</td>
                                     <td>{course.code ?? "—"}</td>
                                     <td>{course.credits ?? "—"}</td>
                                     <td className="dashboard-table-desc">

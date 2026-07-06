@@ -38,6 +38,10 @@ const REQUIRED_KEYS: (keyof CourseInsert)[] = [
   "prerequisites",
   "assessment",
   "url",
+  "start_date",
+  "end_date",
+  "enrollment_start_date",
+  "enrollment_end_date",
 ];
 
 // =====================================================================
@@ -135,6 +139,14 @@ function mapKey(raw: string): keyof CourseInsert | null {
     link: "url",
     course_url: "url",
     webpage: "url",
+    start_date: "start_date",
+    startdate: "start_date",
+    end_date: "end_date",
+    enddate: "end_date",
+    enrollment_start_date: "enrollment_start_date",
+    enrollmentstartdate: "enrollment_start_date",
+    enrollment_end_date: "enrollment_end_date",
+    enrollmentenddate: "enrollment_end_date",
   };
 
   return mapping[k] ?? null;
