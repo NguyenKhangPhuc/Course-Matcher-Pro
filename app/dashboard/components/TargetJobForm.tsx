@@ -96,9 +96,10 @@ export function TargetJobForm({
                         show: { opacity: 1, y: 0 },
                     }}
                 >
-                    <label className="dashboard-label">Company Name</label>
+                    <label htmlFor="company-name-input" className="dashboard-label">Company Name</label>
 
                     <motion.input
+                        id="company-name-input"
                         {...register("company_name", {
                             required: "Company name is required",
                         })}
@@ -129,9 +130,10 @@ export function TargetJobForm({
                         show: { opacity: 1, y: 0 },
                     }}
                 >
-                    <label className="dashboard-label">Position</label>
+                    <label htmlFor="position-input" className="dashboard-label">Position</label>
 
                     <motion.input
+                        id="position-input"
                         {...register("position", {
                             required: "Position is required",
                         })}
@@ -162,11 +164,12 @@ export function TargetJobForm({
                         show: { opacity: 1, y: 0 },
                     }}
                 >
-                    <label className="dashboard-label">
+                    <label htmlFor="job-desc-textarea" className="dashboard-label">
                         Job Description
                     </label>
 
                     <motion.textarea
+                        id="job-desc-textarea"
                         {...register("job_description", {
                             required: "Job description is required",
                             minLength: {

@@ -27,7 +27,7 @@ export async function login(formData: LoginForm) {
         return { error: error.code }
     }
 
-    redirect('/')
+    redirect('/dashboard')
 }
 
 export async function signup(formData: SignupForm, origin: string) {
@@ -37,7 +37,7 @@ export async function signup(formData: SignupForm, origin: string) {
     // in practice, you should validate your inputs
 
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: { data: { full_name: formData.fullName, email: formData.email }, emailRedirectTo: `${origin}/auth/callback`, }
@@ -46,6 +46,8 @@ export async function signup(formData: SignupForm, origin: string) {
     if (error) {
         return { error: error.code }
     }
+    console.log("DATA", data)
+    console.log("ERROR", error)
 
     redirect(`/sign-up/verify-account?email=${formData.email}`)
 }

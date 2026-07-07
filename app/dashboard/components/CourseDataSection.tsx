@@ -200,11 +200,12 @@ export function CourseDataSection({
                     transition={{ duration: 0.25 }}
                     className="mt-2 mb-1 flex flex-col gap-2 sm:flex-row sm:items-center"
                 >
-                    <span className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
+                    <label htmlFor="programme-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
                         Programme
-                    </span>
+                    </label>
 
                     <motion.select
+                        id="programme-select"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.2 }}

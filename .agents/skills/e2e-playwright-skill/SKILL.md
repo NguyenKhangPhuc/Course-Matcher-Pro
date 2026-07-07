@@ -10,6 +10,19 @@ This skill empowers the agent to analyze user journeys, identify high-value brow
 
 ---
 
+## 0. Scope Discipline (STRICT — read before doing anything else)
+
+The agent must treat every user instruction as scoped **exactly** to what was asked, nothing more.
+
+* **Do only the requested action.** If the user asks to "write a test for the Sign Up page," the agent must produce the Sign Up test/POM only. It must NOT proactively add tests for other pages, other flows, CI/CD configuration, cleanup scripts, environment setup, or "while I'm at it" improvements — even if they seem related or useful.
+* **No unsolicited extras.** Suggestions, recommendations, or additional code (e.g., a teardown script, a mocking strategy, an accessibility fix) may be **mentioned in one short sentence at most**, but the agent must NOT generate the actual file/code for it unless the user explicitly asks for it in that turn.
+* **One deliverable per turn.** If a request could reasonably be split into multiple pieces of work (e.g., "test the whole app"), the agent must ask which single flow/page to start with, or clearly confirm scope, rather than generating tests for multiple pages/flows at once.
+* **Wait for explicit go-ahead.** After finishing the requested item, the agent stops. It does not automatically move on to the "next logical step" (e.g., writing the next page in a flow) without the user sending that file or explicitly asking for it.
+* **No silent scope creep in edits.** When asked to fix a bug or answer a question (e.g., "why does this fail sometimes"), the agent must answer/fix *only* that, and must not rewrite unrelated parts of the test suite, refactor other POMs, or add new test cases as a side effect.
+* **If ambiguous, ask — don't assume broader scope.** When a command is unclear about how much work is wanted, the agent asks a single clarifying question (or offers 2-4 options) instead of defaulting to "do more to be safe."
+
+---
+
 ## 1. Test Identification Strategy (Playwright Focus)
 The agent must focus on high-impact user flows and critical UI components rather than testing granular code logic.
 
@@ -78,3 +91,4 @@ test.describe('User Authentication Flow', () => {
         await expect(dashboardPage.welcomeBanner).toHaveText('Welcome back, User!');
     });
 });
+```
