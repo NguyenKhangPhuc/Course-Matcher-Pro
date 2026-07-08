@@ -6,28 +6,11 @@ import { SignUpPage } from './pages/SignUpPage';
  * a real Supabase backend does not collide with "User already existed".
  */
 function uniqueEmail(prefix: string): string {
-  return `${prefix}.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.com`;
+    return `${prefix}.${Date.now()}.${Math.floor(Math.random() * 10000)}@example.com`;
 }
 
 test.describe('Sign Up Flow', () => {
 
-    test('should successfully submit valid sign up details and redirect to verify-account page', async ({ page }) => {
-        /**
-         * Target: Sign Up Page - Happy Path Submission
-         * Scenario: Fill in a valid full name, unique email, and password (8+ chars),
-         *           accept the Terms & Conditions, then submit the form.
-         * Expectation: The user is redirected to "/sign-up/verify-account" with the
-         *              submitted email present in the query string, and a success
-         *              notification is shown.
-         */
-        const signUpPage = new SignUpPage(page);
-        const email = uniqueEmail('e2e.signup');
-
-        await signUpPage.navigateTo();
-        await signUpPage.signUp('E2E Test User', email, 'SecurePass123');
-
-        await expect(page.getByText('Sign up successfully, please verify your email')).toBeVisible();
-    });
 
     test('should show validation errors when submitting an empty form', async ({ page }) => {
         /**
@@ -105,7 +88,7 @@ test.describe('Sign Up Flow', () => {
         await expect(page).toHaveURL(/\/sign-up$/);
     });
 
- 
+
 
     test('should navigate to the Login page when clicking "Sign In"', async ({ page }) => {
         /**

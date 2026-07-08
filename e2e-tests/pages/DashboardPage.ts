@@ -49,19 +49,19 @@ export class DashboardPage {
     this.dropzoneText = page.locator('.dashboard-dropzone-text');
     this.courseTable = page.locator('.dashboard-table');
     this.courseTableRows = page.locator('.dashboard-table tbody tr');
-    
+
     // Now using getByLabel because of the added htmlFor/id connection
     this.programmeSelect = page.getByLabel('Programme');
     this.sourcePills = page.locator('.dashboard-pill');
 
     // Target Job Form
     this.targetJobTitle = page.getByRole('heading', { name: /Target Job/i });
-    
+
     // Now using getByLabel because of the added htmlFor/id connection
     this.companyInput = page.getByLabel('Company Name');
     this.positionInput = page.getByLabel('Position');
     this.jobDescInput = page.getByLabel('Job Description');
-    
+
     this.analyzeButton = page.getByRole('button', { name: /Start Analyze/i });
 
     // Target Job Form Errors
@@ -77,8 +77,8 @@ export class DashboardPage {
 
     // Save Modal
     this.saveModalTitle = page.getByText('Do you want to save your search?');
-    this.saveYesButton = page.getByRole('button', { name: 'Yes' });
-    this.saveNoButton = page.getByRole('button', { name: 'No' });
+    this.saveYesButton = page.getByRole('button', { name: 'Exact', exact: true });
+    this.saveNoButton = page.getByRole('button', { name: 'No', exact: true });
   }
 
   async navigateTo() {

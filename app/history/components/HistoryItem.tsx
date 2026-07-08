@@ -73,7 +73,7 @@ export function HistoryItem({
      * - React.ReactElement: The rendered history item list element.
      */
     return (
-        <div className="bg-white border border-[#4ad2ff] rounded-2xl overflow-hidden min-w-0">
+        <div data-testid="history-item" className="bg-white border border-[#4ad2ff] rounded-2xl overflow-hidden min-w-0">
             {/* Row header — clickable */}
             <button
                 onClick={onToggleExpand}
@@ -128,7 +128,7 @@ export function HistoryItem({
                         transition={{ duration: 0.45, ease: "easeOut" }}
                         className="overflow-hidden"
                     >
-                        <div className="border-t border-[#4ad2ff] px-6 py-5 min-w-0">
+                        <div data-testid="history-expanded-panel" className="border-t border-[#4ad2ff] px-6 py-5 min-w-0">
                             {/* Matched courses label */}
                             <div className="flex items-center justify-between mb-4">
                                 <p className="text-xs font-bold text-[#6b9daa] uppercase tracking-wide">

@@ -54,6 +54,7 @@ export function CourseMatchCard({ match }: CourseMatchCardProps) {
 
     return (
         <div
+            data-testid="course-match-card"
             onClick={toggleExpand}
             className="border border-[#d6edf5] rounded-2xl bg-[#fafeff] p-3.5 flex flex-col gap-2 hover:shadow-[0_4px_16px_rgba(125,216,204,0.18)] transition-shadow cursor-pointer min-w-0 w-full overflow-hidden"
         >
