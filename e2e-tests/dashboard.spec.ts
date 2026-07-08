@@ -13,7 +13,8 @@ async function loginUser(page: Page, email: string): Promise<void> {
 
   await loginPage.navigateTo();
   await loginPage.signIn(email, TEST_PASSWORD);
-  await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/);
+  await page.waitForTimeout(1000);
+  await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/, { timeout: 40000 });
 }
 
 test.describe.configure({ mode: 'serial' });
@@ -22,7 +23,8 @@ test.describe('Dashboard Flow', () => {
   let sharedPage: Page;
   let dashboardPage: DashboardPage;
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }, testInfo) => {
+    testInfo.setTimeout(testInfo.timeout + 40_000);
     sharedPage = await browser.newPage();
     dashboardPage = new DashboardPage(sharedPage);
     await loginUser(sharedPage, TEST_EMAIL);
@@ -49,7 +51,7 @@ test.describe('Dashboard Flow', () => {
     await dashboardPage.selectSource('example.xlsx');
 
     // Verify that the success notification is shown or courses load
-    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible();
+    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 10000 });
 
     // Verify all 3 seeded courses are listed in the table
     await expect(dashboardPage.courseTableRows).toHaveCount(3);

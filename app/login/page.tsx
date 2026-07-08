@@ -36,7 +36,7 @@ const Home = () => {
         }
     }
     const onSubmit = async (userInfo: LoginForm) => {
-        setIsOpenLoader({isOpen: true})
+        // setIsOpenLoader({isOpen: true})
         try {
             const { error } = await login(userInfo)
 

@@ -31,7 +31,8 @@ export class HistoryPage {
     this.page = page;
 
     this.pageHeader = page.getByRole('heading', { name: /History/i });
-    this.historyItems = page.getByTestId('history-item');
+    this.historyItems = page.locator('.bg-white.border.border-\\[\\#4ad2ff\\]'); // Matches the container of HistoryItem
+
     // The header button inside the first history item card
     this.firstHistoryItemHeader = this.historyItems.first().getByRole('button').first();
     this.expandedPanel = this.historyItems.first().getByTestId('history-expanded-panel');

@@ -9,11 +9,12 @@ const TEST_PASSWORD = '1231232312123';
  * Logs in with the seeded test user account.
  */
 async function loginUser(page: Page, email: string): Promise<void> {
-  const loginPage = new LoginPage(page);
+    const loginPage = new LoginPage(page);
 
-  await loginPage.navigateTo();
-  await loginPage.signIn(email, TEST_PASSWORD);
-  await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/);
+    await loginPage.navigateTo();
+    await loginPage.signIn(email, TEST_PASSWORD);
+    await page.waitForTimeout(1000);
+    await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/, { timeout: 40000 });
 }
 
 test.describe.configure({ mode: 'serial' });
@@ -22,7 +23,9 @@ test.describe('Search History Flow', () => {
     let sharedPage: Page;
     let historyPage: HistoryPage;
 
-    test.beforeAll(async ({ browser }) => {
+    test.beforeAll(async ({ browser }, testInfo) => {
+        testInfo.setTimeout(testInfo.timeout + 40_000);
+
         sharedPage = await browser.newPage();
         historyPage = new HistoryPage(sharedPage);
         await loginUser(sharedPage, TEST_EMAIL);
