@@ -98,11 +98,12 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$anon_key" >> $GITHUB_ENV
 
       - name: Execute Playwright E2E Tests
-        run: npx playwright test
+        run: npm run e2e
         env:
           # Inject keys into Playwright runtime env
           NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
@@ -142,6 +143,7 @@ jobs:
           # Next.js build requires these variables to be defined, using placeholder credentials
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder' }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'placeholder' }}
   # ==========================================
   # STAGE 3: DEPLOYMENT
   # ==========================================

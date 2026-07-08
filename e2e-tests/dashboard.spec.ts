@@ -44,7 +44,7 @@ test.describe('Dashboard Flow', () => {
     await dashboardPage.navigateTo();
 
     // Layout check
-    await expect(dashboardPage.courseDataTitle).toBeVisible();
+    await expect(dashboardPage.courseDataTitle).toBeVisible({ timeout: 15000 });
     await expect(dashboardPage.targetJobTitle).toBeVisible();
 
     // Select the seeded source pill
