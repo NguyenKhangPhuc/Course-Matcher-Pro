@@ -142,7 +142,6 @@ jobs:
           # Next.js build requires these variables to be defined, using placeholder credentials
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder' }}
-
   # ==========================================
   # STAGE 3: DEPLOYMENT
   # ==========================================
