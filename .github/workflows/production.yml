@@ -192,6 +192,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GITHUB_CLIENT }}
           SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GITHUB_SECRET }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           
       - name: Deploy Project to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
@@ -208,19 +209,19 @@ jobs:
     # Rationale: Creates a permanent, traceable historical marker matching the code currently running in production.
     # Dependencies: Requires successful execution of the deploy job.
     name: Auto-Versioning & Release
+    needs: [deploy]
+    if: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '#skip') }}
     runs-on: ubuntu-latest
-    needs: deploy
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Bump Version and Push Git Tag
-        run: |
-          echo "Deployment successful. Tagging version release..."
-          # Real Git Tagging implementation (example)
-          # git config user.name "github-actions[bot]"
-          # git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # git tag v1.0.${{ github.run_number }}
-          # git push origin v1.0.${{ github.run_number }}
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: '0'
+    - name: Bump version and push tag
+      uses: anothrNick/github-tag-action@8c8163ef62cf9c4677c8e800f36270af27930f42 # Don't use @master or @v1 unless you're happy to test the latest version
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }} # if you don't want to set write permissions use a PAT token
+        WITH_V: false
+        DEFAULT_BUMP: patch
+      
