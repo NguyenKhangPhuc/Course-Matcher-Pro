@@ -234,7 +234,7 @@ export default function SourceManagementClient({ sources }: Props) {
 
     const handleSelectCourse = (course: CourseInsert) => {
         setEditingCourse(course)
-        console.log(course)
+        // console.log(course)
         reset({
             ...course,
             start_date: formatDateForInput(course.start_date ?? null),

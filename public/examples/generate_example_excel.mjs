@@ -198,4 +198,4 @@ XLSX.utils.book_append_sheet(workbook, worksheet, "Courses");
 const outputPath = path.join(__dirname, "courses_example.xlsx");
 XLSX.writeFile(workbook, outputPath);
 
-console.log(`Generated: ${outputPath}`);
+// console.log(`Generated: ${outputPath}`);

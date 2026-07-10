@@ -107,7 +107,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             if (data.error) throw new Error(data.error);
             courses.current = data.data ?? []
             setFilterCourses(data.data ?? [])
-            console.log(data.data)
+            // console.log(data.data)
             const programmeResult = await getUniqueProgrammeBySourceId(sourceId);
             if (programmeResult.error) throw new Error(programmeResult.error);
             setProgrammes(programmeResult.data);
@@ -304,7 +304,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
 
                 },
                 (type, data) => {
-                    console.log(type, data)
+                    // console.log(type, data)
                     if (type === "requirements") {
                         localAgentResult.technical_requirements = data as string;
                         setAgentResult({ ...localAgentResult });
@@ -337,7 +337,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
 
     const handleSelectProgramme = (chosenProgramme: string | null) => {
         if (!chosenProgramme || chosenProgramme.length == 0) {
-            console.log(courses.current)
+            // console.log(courses.current)
             setFilterCourses(courses.current)
             setSelectedProgramme(null)
             return

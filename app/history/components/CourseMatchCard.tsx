@@ -24,9 +24,9 @@ interface CourseMatchCardProps {
 export function CourseMatchCard({ match }: CourseMatchCardProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const course = match.courses;
-    console.log(match)
+    // console.log(match)
     function formatDateRange(start?: string | null, end?: string | null): string {
-        console.log(start,end)
+        // console.log(start,end)
         if (!start && !end) return "TBA";
         const fmt = (d: string) =>
             new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });

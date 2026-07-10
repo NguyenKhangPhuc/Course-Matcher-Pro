@@ -197,17 +197,17 @@ async function embedCourses(
 
   for (let i = 0; i < courses.length; i += BATCH_SIZE) {
     const batch = courses.slice(i, i + BATCH_SIZE);
-    console.log(`Embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(courses.length / BATCH_SIZE)}`);
+    // console.log(`Embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(courses.length / BATCH_SIZE)}`);
 
     const results = await Promise.allSettled(
       batch.map(async (course, index) => {
         const identifier = course.code || course.name || "unknown";
         const searchableText = buildSearchableText(course);
         if (index < 3) { // chỉ log 3 course đầu
-          console.log('=== Course:', course.code);
-          console.log('learning_outcomes length:', course.learning_outcomes?.length);
-          console.log('searchable_text:', searchableText.slice(0, 200));
-          console.log('===');
+          // console.log('=== Course:', course.code);
+          // console.log('learning_outcomes length:', course.learning_outcomes?.length);
+          // console.log('searchable_text:', searchableText.slice(0, 200));
+          // console.log('===');
         }
         if (!searchableText.trim()) {
           throw new Error("No searchable text");
@@ -268,7 +268,7 @@ async function batchInsertCourses(
   batchSize = 50
 ): Promise<{ inserted: number; errors: { code: string; error: string }[] }> {
   const supabase = await createClient();
-  console.log("Step 3")
+  // console.log("Step 3")
   // Map rows sang DB shape một lần duy nhất
   const dbRows = rows.map((row) => ({
     source_id: row.source_id,
@@ -304,7 +304,7 @@ async function batchInsertCourses(
   // Tất cả batches chạy song song — không sequential
   const results = await Promise.all(
     batches.map((batch, index) => {
-      console.log("Insered batch " + index)
+      // console.log("Insered batch " + index)
       return supabase.from("courses").insert(batch).select("id")
     }
     )
@@ -409,7 +409,7 @@ export async function uploadAndEmbedCourses(
         "No course records were found in the uploaded file. Please check the file format."
       );
     }
-    console.log("Courses length not equal 0 = " + courses.length)
+    // console.log("Courses length not equal 0 = " + courses.length)
     // ── Step 3: Embed ──────────────────────────────────────────────────
     const { rows, errors: embedErrors } = await embedCourses(courses, sourceId);
 
@@ -420,7 +420,7 @@ export async function uploadAndEmbedCourses(
     );
 
     const allErrors = [...embedErrors, ...insertErrors];
-    console.log("Finished")
+    // console.log("Finished")
     return {
       success: inserted > 0,
       source_id: sourceId,

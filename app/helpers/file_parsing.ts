@@ -243,7 +243,7 @@ function rowToCourse(row: Record<string, unknown>): CourseInsert {
  */
 export async function parseExcel(file: File): Promise<CourseInsert[]> {
   const { read, utils } = await import("xlsx");
-  console.log("Step 1")
+  // console.log("Step 1")
   const buffer = await file.arrayBuffer();
   const workbook = read(buffer, { type: "array" });
 
@@ -380,7 +380,7 @@ export async function parseJson(file: File): Promise<CourseInsert[]> {
  *   const file = input.files?.[0]
  *   if (!file) return
  *   const courses = await parseFile(file)
- *   console.log(courses)
+ *   // console.log(courses)
  * })
  */
 export async function parseFile(file: File): Promise<CourseInsert[]> {
@@ -389,7 +389,7 @@ export async function parseFile(file: File): Promise<CourseInsert[]> {
   switch (ext) {
     case "xlsx":
     case "xls":
-      console.log("Start to parse excel")
+      // console.log("Start to parse excel")
       const coursesExcel = await parseExcel(file);
       return deduplicateByCodes(coursesExcel)
     case "csv":

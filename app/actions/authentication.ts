@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '../utils/supabase/server'
-import { LoginForm, SignupForm, VerifyAccountForm } from '../types/authentication'
+import { LoginForm, ResetPasswordForm, SignupForm, VerifyAccountForm } from '../types/authentication'
 
 export async function getUser() {
     const supabase = await createClient();
@@ -46,8 +46,8 @@ export async function signup(formData: SignupForm, origin: string) {
     if (error) {
         return { error: error.code }
     }
-    console.log("DATA", data)
-    console.log("ERROR", error)
+    // console.log("DATA", data)
+    // console.log("ERROR", error)
 
     redirect(`/sign-up/verify-account?email=${formData.email}`)
 }
@@ -98,4 +98,30 @@ export async function verifySignUpAccount(verifyAccount: VerifyAccountForm) {
         return { error: 'Fail to verify the OTP' }
     }
     return { data, error }
+}
+
+
+export async function resetPassword(resetPasswordData: ResetPasswordForm) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.verifyOtp(
+        {
+            email: resetPasswordData.email,
+            token: resetPasswordData.otp,
+            type: 'email'
+        }
+    )
+    if (error) {
+        return { error: 'Fail to verify the OTP' }
+    }
+
+    if (data.session == null) {
+        return { error: 'Fail to update the user password' }
+    }
+    const { error: userError } = await supabase.auth.updateUser({ password: resetPasswordData.newPassword })
+    if (userError) {
+        return { error: 'Fail to update the user password' }
+    }
+    await supabase.auth.signOut({ scope: 'global' });
+
+    return { error: null }
 }
