@@ -6,7 +6,8 @@ import { useContext, useState, createContext, Dispatch, SetStateAction } from "r
 // The type to be passed in the notification (in value)
 interface LoaderAttributes {
     title?: string,
-    isOpen: boolean
+    isOpen: boolean,
+    progress?: number
 }
 interface LoaderProviderValueType {
     isOpenLoader: LoaderAttributes,

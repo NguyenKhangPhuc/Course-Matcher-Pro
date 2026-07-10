@@ -48,10 +48,11 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const coursesSectionRef = useRef<HTMLDivElement>(null);
     const [programmes, setProgrammes] = useState<string[]>([]);
     const [selectedProgramme, setSelectedProgramme] = useState<string | null>(null);
+    const uploadProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Scroll to results section on new result stream start
     useEffect(() => {
-        if (agentResult) {
+        if (isAnalyzing == true) {
             const timer = setTimeout(() => {
                 coursesSectionRef.current?.scrollIntoView({
                     behavior: "smooth",
@@ -60,7 +61,17 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             }, 100);
             return () => clearTimeout(timer);
         }
-    }, [agentResult]);
+    }, [isAnalyzing]);
+
+    // Clear the simulated upload progress interval on unmount to prevent
+    // memory leaks and stale state updates on an unmounted component.
+    useEffect(() => {
+        return () => {
+            if (uploadProgressRef.current !== null) {
+                clearInterval(uploadProgressRef.current);
+            }
+        };
+    }, []);
 
     const {
         register,
@@ -118,14 +129,29 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const handleUploadFile = useCallback(
         async (file: File): Promise<void> => {
             setIsUploading(true);
-            setIsOpenLoader({ isOpen: true, title: "Load source could take very long, stay tuned" });
+
+            // Start loader with progress at 1 and simulate ticking up to ~90 %
+            // while the server processes the file (no real progress signal from API).
+            setIsOpenLoader({ isOpen: true, title: "Load source could take very long, stay tuned", progress: 1 });
+            let simulatedProgress = 1;
+            uploadProgressRef.current = setInterval(() => {
+                simulatedProgress = Math.min(90, simulatedProgress + Math.ceil((90 - simulatedProgress) * 0.06) || 1);
+                setIsOpenLoader((prev) => ({ ...prev, progress: simulatedProgress }));
+            }, 400);
+
             try {
                 const formData = new FormData();
                 formData.append("file", file);
 
                 const result = await uploadAndEmbedCourses(formData);
+
+                // Stop simulation and jump to 100 % before closing
+                if (uploadProgressRef.current) clearInterval(uploadProgressRef.current);
+                setIsOpenLoader((prev) => ({ ...prev, progress: 100 }));
+
                 if (!result.success) {
                     showNotification(`Upload failed: ${result.errors[0]?.error ?? "Unknown error"}`);
+                    setIsOpenLoader({ isOpen: false });
                     return;
                 }
 
@@ -153,9 +179,12 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     ...prev,
                 ]);
                 setIsUploading(false);
+                // Small delay so the user sees 100 % before the overlay disappears
+                await new Promise((r) => setTimeout(r, 600));
                 setIsOpenLoader({ isOpen: false });
                 showNotification(`Loaded ${result.inserted} courses successfully.`);
             } catch (err) {
+                if (uploadProgressRef.current) clearInterval(uploadProgressRef.current);
                 setIsOpenLoader({ isOpen: false });
                 showNotification(err instanceof Error ? err.message : "Upload failed.");
             }
@@ -176,7 +205,10 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
      * - Promise<void>
      */
     const handleSaveHistory = async (): Promise<void> => {
-        setIsOpenLoader({ isOpen: true });
+        // Open loader at 0 % then ramp to 50 % while the API call is in flight.
+        setIsOpenLoader({ isOpen: true, title: "Saving your search...", progress: 1 });
+        await new Promise((r) => setTimeout(r, 120)); // allow first render
+        setIsOpenLoader((prev) => ({ ...prev, progress: 50 }));
         try {
             const searchHistory: SearchHistoryInsert = {
                 company_name: getValues("company_name"),
@@ -193,6 +225,9 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             if (result.error) {
                 throw new Error(result.error);
             }
+            // Jump to 100 % and let the user see the completed bar briefly
+            setIsOpenLoader((prev) => ({ ...prev, progress: 100 }));
+            await new Promise((r) => setTimeout(r, 600));
             setIsOpenLoader({ isOpen: false });
             handleDismissSave();
             showNotification("Save the matches successfully");

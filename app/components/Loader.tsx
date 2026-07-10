@@ -1,6 +1,7 @@
 'use client'
 
 import { useLoader } from "../context/LoaderContext"
+import ProgressLoader from "./ProgressLoader"
 
 const Loader = () => {
     const { isOpenLoader } = useLoader()
@@ -9,7 +10,6 @@ const Loader = () => {
     }
     return (
         <div className="fixed inset-0 z-[9999] w-full h-screen flex flex-col justify-center items-center bg-black/20 backdrop-blur-md">
-            {(isOpenLoader.title && isOpenLoader.title.length != 0) && <div className="text-2xl text-[#1a2e35] font-bold mb-10">{isOpenLoader.title}</div>}
             <div className="cube-loader">
                 <div className="cube-top"></div>
                 <div className="cube-wrapper">
@@ -20,6 +20,16 @@ const Loader = () => {
                 </div>
             </div>
 
+            {/* Progress bar — only rendered when a progress value is provided */}
+            {isOpenLoader.progress !== undefined && (
+                <div className="mt-8 w-full flex justify-center px-6">
+                    <ProgressLoader
+                        progress={isOpenLoader.progress}
+                        label={isOpenLoader.title}
+                        subLabel="Loading..."
+                    />
+                </div>
+            )}
         </div>
     )
 }

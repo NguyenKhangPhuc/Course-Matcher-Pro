@@ -970,3 +970,22 @@ hboard · CSS
   stroke-dasharray: 20 300;
   stroke-dashoffset: -32.42;
 }
+
+/* ================================================================
+   PROGRESS LOADER — keyframes & animation utilities (Tailwind v4)
+   ================================================================ */
+
+@keyframes progress-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes progress-dot {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+  40%           { transform: scale(1.2); opacity: 1; }
+}
+
+@theme inline {
+  --animate-progress-shimmer: progress-shimmer 1.6s linear infinite;
+  --animate-progress-dot: progress-dot 1s ease-in-out infinite;
+}
