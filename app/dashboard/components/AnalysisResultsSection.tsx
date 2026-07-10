@@ -40,12 +40,14 @@ export function AnalysisResultsSection({
         if (start && end) return `${fmt(start)} – ${fmt(end)}`;
         return fmt(start || end!);
     }
+
     /**
      * BEHAVIORAL MECHANISM:
-     * Component function that renders the analysis results. If agentResult is present,
-     * it renders a animated container. Within this, it displays technical requirements
-     * and a grid of course recommendations. Motion properties control the fading and sliding
-     * animations of course cards as they stream in.
+     * Section mounts as soon as isAnalyzing turns true (even while agentResult is
+     * still null), immediately scrolling into view and showing skeleton loaders for
+     * both the requirements block and the courses grid. Results stream in progressively
+     * as the agent responds. The section stays visible after analysis completes so the
+     * user can browse the full result set.
      *
      * PARAMETERS:
      * - None
@@ -53,9 +55,13 @@ export function AnalysisResultsSection({
      * RETURNS:
      * - React.ReactElement: The rendered analysis results section or null.
      */
+
+    /* Show the section the moment analysis starts OR when we already have a result */
+    const shouldShow = isAnalyzing || agentResult !== null;
+
     return (
         <AnimatePresence>
-            {agentResult && (
+            {shouldShow && (
                 <motion.section
                     className="dashboard-card dashboard-results"
                     initial={{ opacity: 0, y: 24 }}
@@ -81,7 +87,7 @@ export function AnalysisResultsSection({
                         <p className="dashboard-requirements-label">Technical Requirements Identified</p>
 
                         <AnimatePresence mode="wait">
-                            {agentResult.technical_requirements ? (
+                            {agentResult?.technical_requirements ? (
                                 <motion.p
                                     key="req-content"
                                     className="dashboard-requirements-text"
@@ -113,7 +119,7 @@ export function AnalysisResultsSection({
                         <p className="dashboard-requirements-label">Recommended Academic Courses</p>
 
                         <AnimatePresence mode="wait">
-                            {isAnalyzing && (!agentResult.courses || agentResult.courses.length === 0) ? (
+                            {isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
                                 <motion.div
                                     key="grid-loader"
                                     initial={{ opacity: 0 }}
@@ -125,7 +131,7 @@ export function AnalysisResultsSection({
                                         label="Querying vector database & compiling matches..."
                                     />
                                 </motion.div>
-                            ) : !isAnalyzing && (!agentResult.courses || agentResult.courses.length === 0) ? (
+                            ) : !isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
                                 <motion.p
                                     key="grid-empty"
                                     className="dashboard-table-empty"
@@ -141,7 +147,7 @@ export function AnalysisResultsSection({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                 >
-                                    {agentResult.courses.map((course, i) => (
+                                    {agentResult?.courses.map((course, i) => (
                                         <motion.div
                                             key={course.code ?? course.id ?? i}
                                             className="border border-[#d6edf5] rounded-2xl bg-[#fafeff] p-3.5 flex flex-col gap-2 hover:shadow-[0_4px_16px_rgba(125,216,204,0.18)] transition-shadow cursor-pointer min-w-0 w-full overflow-hidden"

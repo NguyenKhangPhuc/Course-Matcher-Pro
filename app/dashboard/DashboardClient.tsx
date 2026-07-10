@@ -96,16 +96,23 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
         setSelectedSourceId(sourceId);
         setAgentResult(null);
         setSelectedProgramme(null); // reset filter khi đổi source
-        setIsOpenLoader({ isOpen: true });
+
+        // Step 0 → 1 %: open overlay
+        setIsOpenLoader({ isOpen: true, title: "Saving your search...", progress: 1 });
+        await new Promise((r) => setTimeout(r, 120)); // allow first render
+        setIsOpenLoader((prev) => ({ ...prev, progress: 40 }));
         try {
+            // Step 1 → 50 %: fetch courses
             const data = await getCoursesBySourceId(sourceId);
             if (data.error) throw new Error(data.error);
             courses.current = data.data ?? []
-            setFilterCourses(data.data ?? [])
+
             const programmeResult = await getUniqueProgrammeBySourceId(sourceId);
             if (programmeResult.error) throw new Error(programmeResult.error);
             setProgrammes(programmeResult.data);
-
+            setIsOpenLoader((prev) => ({ ...prev, progress: 100 }));
+            await new Promise((r) => setTimeout(r, 1000));
+            // Brief pause so the user sees the completed bar before it disappears
             setIsOpenLoader({ isOpen: false });
             showNotification("Load the courses successfully");
         } catch (err) {
@@ -113,6 +120,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             if (err instanceof Error) showNotification(err.message);
         }
     };
+
 
     /**
      * BEHAVIORAL MECHANISM:
