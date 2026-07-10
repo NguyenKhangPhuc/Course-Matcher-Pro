@@ -92,6 +92,7 @@ export async function verifySignUpAccount(verifyAccount: VerifyAccountForm) {
         }
     )
     if (error) {
+        // console.log(error)
         return { error: 'Fail to verify the OTP' }
     }
     if (data.session == null) {

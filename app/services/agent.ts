@@ -39,7 +39,7 @@ export const analyzeJobDescriptionStreamingAxios = async (
                         onChunk(parsed.type, parsed.data);
                     } catch (e) {
                         // Bỏ qua các dòng json chưa hoàn chỉnh do cắt chuỗi ngắt quãng
-                        console.error("Lỗi parse JSON chunk:", e);
+                        // console.error("Error parse JSON chunk:", e);
                     }
                 }
             }
