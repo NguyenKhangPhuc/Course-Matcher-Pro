@@ -41,11 +41,11 @@ export function Footer() {
 
                 {/* Links */}
                 <div className="flex gap-5">
-                    <Link href="/privacy"
+                    <Link href="/privacy-policy"
                         className="text-xs text-[#6b9daa] no-underline transition-colors hover:text-[#1a5c55]">
                         Privacy Policy
                     </Link>
-                    <Link href="/terms"
+                    <Link href="/terms-and-conditions"
                         className="text-xs text-[#6b9daa] no-underline transition-colors hover:text-[#1a5c55]">
                         Terms
                     </Link>
