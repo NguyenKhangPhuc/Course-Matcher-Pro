@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { LayoutDashboard, History, HelpCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, History, HelpCircle, LogOut, Database } from "lucide-react";
 import { createClient } from "../utils/supabase/client";
 import { signout } from "../actions/authentication";
 import { useNotification } from "../context/Notification";
@@ -43,6 +43,11 @@ export const NAV_ITEMS: NavItem[] = [
     label: "History",
     href: "/history",
     icon: <History size={18} strokeWidth={1.8} />,
+  },
+  {
+    label: "Source Management",
+    href: "/source-management",
+    icon: <Database size={18} strokeWidth={1.8} />,
   },
 ];
 
