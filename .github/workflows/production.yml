@@ -81,6 +81,8 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
 
       - name: Start Supabase Local Instances
         run: |
