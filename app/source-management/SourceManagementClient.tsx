@@ -17,17 +17,17 @@
 
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useForm } from "react-hook-form";
 import { SourceInsert } from "../types/source";
 import { CourseInsert } from "../types/course";
-import { getCoursesBySourceId } from "../actions/course";
-import { createClient } from "../utils/supabase/client";
+import { getCoursesBySourceId, updateCourseByCourseId } from "../actions/course";
 import { useNotification } from "../context/Notification";
 import {
     MoreVert, Edit, Check, Close,
     KeyboardArrowDown, KeyboardArrowUp, DeleteForever,
 } from "@mui/icons-material";
 import StorageIcon from "@mui/icons-material/Storage";
-import { deleteSource } from "../actions/source_management";
+import { deleteSource, updateSourceNameBySourceId } from "../actions/source_management";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -46,25 +46,25 @@ type CourseEditable = Pick<
     | "start_date" | "end_date" | "enrollment_start_date" | "enrollment_end_date"
 >;
 
-const COURSE_FIELDS: { key: keyof CourseEditable; label: string; multiline?: boolean }[] = [
-    { key: "code", label: "Code" },
-    { key: "name", label: "Name" },
-    { key: "title", label: "Title" },
-    { key: "programme", label: "Programme" },
-    { key: "degree_type", label: "Degree Type" },
-    { key: "study_option", label: "Study Option" },
-    { key: "instructor", label: "Instructor" },
-    { key: "credits", label: "Credits" },
-    { key: "url", label: "URL" },
-    { key: "start_date", label: "Start Date" },
-    { key: "end_date", label: "End Date" },
-    { key: "enrollment_start_date", label: "Enroll Start" },
-    { key: "enrollment_end_date", label: "Enroll End" },
-    { key: "description", label: "Description", multiline: true },
-    { key: "learning_outcomes", label: "Learning Outcomes", multiline: true },
-    { key: "content", label: "Content", multiline: true },
-    { key: "prerequisites", label: "Prerequisites", multiline: true },
-    { key: "assessment", label: "Assessment", multiline: true },
+const COURSE_FIELDS: { key: keyof CourseEditable; label: string; type: "text" | "date" | "textarea" }[] = [
+    { key: "code", label: "Code", type: "text" },
+    { key: "name", label: "Name", type: "text" },
+    { key: "title", label: "Title", type: "text" },
+    { key: "programme", label: "Programme", type: "text" },
+    { key: "degree_type", label: "Degree Type", type: "text" },
+    { key: "study_option", label: "Study Option", type: "text" },
+    { key: "instructor", label: "Instructor", type: "text" },
+    { key: "credits", label: "Credits", type: "text" },
+    { key: "url", label: "URL", type: "text" },
+    { key: "start_date", label: "Start Date", type: "date" },
+    { key: "end_date", label: "End Date", type: "date" },
+    { key: "enrollment_start_date", label: "Enroll Start", type: "date" },
+    { key: "enrollment_end_date", label: "Enroll End", type: "date" },
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "learning_outcomes", label: "Learning Outcomes", type: "textarea" },
+    { key: "content", label: "Content", type: "textarea" },
+    { key: "prerequisites", label: "Prerequisites", type: "textarea" },
+    { key: "assessment", label: "Assessment", type: "textarea" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,6 +74,11 @@ const COURSE_FIELDS: { key: keyof CourseEditable; label: string; multiline?: boo
 function formatDate(d: string | null | undefined): string {
     if (!d) return "—";
     return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatDateForInput(dateStr: string | null | undefined): string {
+    if (!dateStr) return "";
+    return dateStr.split("T")[0];
 }
 
 function fileTypeBadgeClass(ft: string): string {
@@ -99,47 +104,53 @@ function CourseEditModal({
     onClose: () => void;
     onSave: (updated: CourseInsert) => void;
 }) {
-    const [form, setForm] = useState<CourseEditable>({
-        code: course.code ?? "",
-        name: course.name ?? "",
-        title: course.title ?? "",
-        programme: course.programme ?? "",
-        degree_type: course.degree_type ?? "",
-        study_option: course.study_option ?? "",
-        description: course.description ?? "",
-        learning_outcomes: course.learning_outcomes ?? "",
-        content: course.content ?? "",
-        prerequisites: course.prerequisites ?? "",
-        assessment: course.assessment ?? "",
-        instructor: course.instructor ?? "",
-        credits: course.credits ?? "",
-        url: course.url ?? "",
-        start_date: course.start_date ?? "",
-        end_date: course.end_date ?? "",
-        enrollment_start_date: course.enrollment_start_date ?? "",
-        enrollment_end_date: course.enrollment_end_date ?? "",
+    const { register, handleSubmit, formState: { errors } } = useForm<CourseEditable>({
+        defaultValues: {
+            code: course.code ?? "",
+            name: course.name ?? "",
+            title: course.title ?? "",
+            programme: course.programme ?? "",
+            degree_type: course.degree_type ?? "",
+            study_option: course.study_option ?? "",
+            description: course.description ?? "",
+            learning_outcomes: course.learning_outcomes ?? "",
+            content: course.content ?? "",
+            prerequisites: course.prerequisites ?? "",
+            assessment: course.assessment ?? "",
+            instructor: course.instructor ?? "",
+            credits: course.credits ?? "",
+            url: course.url ?? "",
+            start_date: formatDateForInput(course.start_date),
+            end_date: formatDateForInput(course.end_date),
+            enrollment_start_date: formatDateForInput(course.enrollment_start_date),
+            enrollment_end_date: formatDateForInput(course.enrollment_end_date),
+        }
     });
+
     const [saving, setSaving] = useState(false);
     const { showNotification } = useNotification();
 
     /**
-     * Persists the edited course fields to Supabase and fires onSave callback.
+     * Persists the edited course fields via the updateCourseByCourseId server
+     * action and fires the onSave callback with the merged result.
      */
-    const handleSave = async () => {
+    const onSubmit = async (data: CourseEditable) => {
         setSaving(true);
-        const supabase = createClient();
-        const { error } = await supabase
-            .from("courses")
-            .update(form)
-            .eq("id", course.id!);
+        // Ensure any empty string values for dates/etc. are cleaned/sanitized.
+        const cleanedData = Object.entries(data).reduce((acc, [key, val]) => {
+            acc[key as keyof CourseEditable] = val === "" ? null : val;
+            return acc;
+        }, {} as Record<keyof CourseEditable, any>);
+
+        const { error } = await updateCourseByCourseId(course.id!, cleanedData);
 
         if (error) {
-            showNotification(`Failed to update course: ${error.message}`);
+            showNotification(error);
             setSaving(false);
             return;
         }
         showNotification("Course updated successfully");
-        onSave({ ...course, ...form });
+        onSave({ ...course, ...cleanedData });
         onClose();
     };
 
@@ -167,49 +178,71 @@ function CourseEditModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-[#7aa5b0] hover:text-[#1a2e35] transition-colors p-1 rounded-lg hover:bg-[#f0f7fa]"
+                            className="cursor-pointer text-[#7aa5b0] hover:text-[#1a2e35] transition-colors p-1 rounded-lg hover:bg-[#f0f7fa]"
                         >
                             <Close fontSize="small" />
                         </button>
                     </div>
 
                     {/* Body */}
-                    <div className="overflow-y-auto flex-1 px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {COURSE_FIELDS.map(({ key, label, multiline }) => (
-                            <div key={key} className={multiline ? "sm:col-span-2" : ""}>
-                                <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
-                                    {label}
-                                </label>
-                                {multiline ? (
-                                    <textarea
-                                        className="w-full border border-[#c8e6ee] rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none focus:border-[#7dd8cc] resize-none min-h-[80px]"
-                                        value={(form[key] as string) ?? ""}
-                                        onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
-                                    />
-                                ) : (
-                                    <input
-                                        type="text"
-                                        className="w-full border border-[#c8e6ee] rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none focus:border-[#7dd8cc]"
-                                        value={(form[key] as string) ?? ""}
-                                        onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                    <form
+                        id="course-edit-form"
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="overflow-y-auto flex-1 px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                    >
+                        {COURSE_FIELDS.map(({ key, label, type }) => {
+                            const isTextArea = type === "textarea";
+                            const isDate = type === "date";
+                            const hasError = !!errors[key];
+
+                            return (
+                                <div key={key} className={isTextArea ? "sm:col-span-2" : ""}>
+                                    <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                        {label} {key === "name" && <span className="text-red-500">*</span>}
+                                    </label>
+                                    {isTextArea ? (
+                                        <textarea
+                                            className={`w-full border ${hasError ? "border-red-500 focus:border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                            {...register(key, {
+                                                required: key === "name" ? "Course name is required" : false
+                                            })}
+                                        />
+                                    ) : (
+                                        <input
+                                            type={isDate ? "date" : "text"}
+                                            className={`w-full border ${hasError ? "border-red-500 focus:border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                            {...register(key, {
+                                                required: key === "name" ? "Course name is required" : false,
+                                                validate: isDate
+                                                    ? (value) => !value || !isNaN(Date.parse(value)) || "Please enter a valid date"
+                                                    : undefined
+                                            })}
+                                        />
+                                    )}
+                                    {errors[key] && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors[key]?.message}
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </form>
 
                     {/* Footer */}
                     <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#e8f4f8]">
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#f0f7fa] transition-colors"
+                            className="cursor-pointer px-4 py-2 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#f0f7fa] transition-colors"
                         >
                             Cancel
                         </button>
                         <button
-                            onClick={handleSave}
+                            type="submit"
+                            form="course-edit-form"
                             disabled={saving}
-                            className="px-5 py-2 rounded-lg text-sm font-semibold bg-[#1a5c55] text-white hover:bg-[#2a8a7e] transition-colors disabled:opacity-50"
+                            className="cursor-pointer px-5 py-2 rounded-lg text-sm font-semibold bg-[#1a5c55] text-white hover:bg-[#2a8a7e] transition-colors disabled:opacity-50"
                         >
                             {saving ? "Saving…" : "Save Changes"}
                         </button>
@@ -294,21 +327,14 @@ export default function SourceManagementClient({ sources }: Props) {
     };
 
     /**
-     * Persists the edited source name to Supabase and updates local state.
+     * Persists the edited source name via updateSourceNameBySourceId server
+     * action and updates local state on success.
      */
     const handleSaveName = async (sourceId: string) => {
-        if (!editingName.trim()) {
-            showNotification("Source name cannot be empty.");
-            return;
-        }
-        const supabase = createClient();
-        const { error } = await supabase
-            .from("sources")
-            .update({ name: editingName.trim() })
-            .eq("id", sourceId);
+        const { error } = await updateSourceNameBySourceId(sourceId, editingName);
 
         if (error) {
-            showNotification(`Failed to rename: ${error.message}`);
+            showNotification(error);
             return;
         }
         setSourceList((prev) =>
@@ -467,10 +493,10 @@ export default function SourceManagementClient({ sources }: Props) {
                                                         if (e.key === "Escape") handleCancelEditName();
                                                     }}
                                                 />
-                                                <button onClick={() => handleSaveName(source.id!)} className="text-[#1a5c55] hover:text-[#2a8a7e] p-1">
+                                                <button onClick={() => handleSaveName(source.id!)} className="cursor-pointer text-[#1a5c55] hover:text-[#2a8a7e] p-1">
                                                     <Check fontSize="small" />
                                                 </button>
-                                                <button onClick={handleCancelEditName} className="text-[#7aa5b0] hover:text-[#1a2e35] p-1">
+                                                <button onClick={handleCancelEditName} className="cursor-pointer text-[#7aa5b0] hover:text-[#1a2e35] p-1">
                                                     <Close fontSize="small" />
                                                 </button>
                                             </div>
@@ -512,7 +538,7 @@ export default function SourceManagementClient({ sources }: Props) {
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         <button
-                                            className="text-[#7aa5b0] hover:text-[#1a2e35] transition-colors p-1 rounded-lg hover:bg-[#f0f7fa]"
+                                            className="cursor-pointer text-[#7aa5b0] hover:text-[#1a2e35] transition-colors p-1 rounded-lg hover:bg-[#f0f7fa]"
                                             onClick={() => setOpenMenuId(openMenuId === source.id ? null : source.id!)}
                                         >
                                             <MoreVert fontSize="small" />

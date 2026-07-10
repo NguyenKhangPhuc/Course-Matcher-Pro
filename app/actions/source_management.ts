@@ -531,3 +531,49 @@ export async function deleteSource(sourceId: string): Promise<void> {
     throw new Error(`Failed to delete source: ${error.message}`);
   }
 }
+
+// =====================================================================
+// UTILITY ACTION — UPDATE SOURCE NAME
+// =====================================================================
+
+/**
+ * Update the name of a source record owned by the current user.
+ *
+ * Only the name field is mutated. Ownership is verified so that users
+ * cannot rename sources that belong to other accounts.
+ *
+ * @param sourceId - UUID of the source to rename.
+ * @param name     - The new display name (must be non-empty).
+ * @returns        Object with an optional error string.
+ */
+export async function updateSourceNameBySourceId(
+  sourceId: string,
+  name: string
+): Promise<{ error?: string }> {
+  if (!name.trim()) {
+    return { error: "Source name cannot be empty." };
+  }
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { error: "You must be logged in to rename a source." };
+  }
+
+  const { error } = await supabase
+    .from("sources")
+    .update({ name: name.trim(), updated_at: new Date().toISOString() })
+    .eq("id", sourceId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: `Failed to rename source: ${error.message}` };
+  }
+
+  return {};
+}
