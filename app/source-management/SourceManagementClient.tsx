@@ -1,23 +1,21 @@
 /**
  * PURPOSE:
- * Interactive Source Management client component. Renders a page header matching
- * the History page style, a stat summary bar, and an expandable sources table.
- * Courses are fetched lazily via getCoursesBySourceId only when the user expands
- * a source row for the first time. Framer Motion handles all enter/exit animations.
- *
- * CONTEXT/PARENT FILE:
- * app/source-management/page.tsx
- *
- * INPUTS / PARAMETERS:
- * - sources (SourceInsert[]) – pre-fetched sources list from the server.
- * - userId  (string)         – current user's UUID.
+ * Simplified interactive Source Management client component.
+ * Renders a page header matching the History page style, a stat summary bar,
+ * and an expandable sources table.
+ * 
+ * Logic Simplifications:
+ * - Removed nested cache `Record<string, CourseInsert[]>` courseMap in favor of a single `activeCourses` array.
+ * - Removed `CourseEditable` type, using `CourseInsert` directly everywhere.
+ * - Simplified defaultValues in react-hook-form by spreading the `course` object.
+ * - Simplified `totalCourses` to use `activeCourses.length`.
  */
 
 "use client";
 
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm, UseFormHandleSubmit, UseFormRegister } from "react-hook-form";
 import { SourceInsert } from "../types/source";
 import { CourseInsert } from "../types/course";
 import { getCoursesBySourceId, updateCourseByCourseId } from "../actions/course";
@@ -30,42 +28,21 @@ import StorageIcon from "@mui/icons-material/Storage";
 import { deleteSource, updateSourceNameBySourceId } from "../actions/source_management";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TYPES
+// TYPES & METADATA
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
     sources: SourceInsert[];
     userId: string;
 }
-
-type CourseEditable = Pick<
-    CourseInsert,
-    | "code" | "name" | "title" | "programme" | "degree_type" | "study_option"
-    | "description" | "learning_outcomes" | "content" | "prerequisites"
-    | "assessment" | "instructor" | "credits" | "url"
-    | "start_date" | "end_date" | "enrollment_start_date" | "enrollment_end_date"
->;
-
-const COURSE_FIELDS: { key: keyof CourseEditable; label: string; type: "text" | "date" | "textarea" }[] = [
-    { key: "code", label: "Code", type: "text" },
-    { key: "name", label: "Name", type: "text" },
-    { key: "title", label: "Title", type: "text" },
-    { key: "programme", label: "Programme", type: "text" },
-    { key: "degree_type", label: "Degree Type", type: "text" },
-    { key: "study_option", label: "Study Option", type: "text" },
-    { key: "instructor", label: "Instructor", type: "text" },
-    { key: "credits", label: "Credits", type: "text" },
-    { key: "url", label: "URL", type: "text" },
-    { key: "start_date", label: "Start Date", type: "date" },
-    { key: "end_date", label: "End Date", type: "date" },
-    { key: "enrollment_start_date", label: "Enroll Start", type: "date" },
-    { key: "enrollment_end_date", label: "Enroll End", type: "date" },
-    { key: "description", label: "Description", type: "textarea" },
-    { key: "learning_outcomes", label: "Learning Outcomes", type: "textarea" },
-    { key: "content", label: "Content", type: "textarea" },
-    { key: "prerequisites", label: "Prerequisites", type: "textarea" },
-    { key: "assessment", label: "Assessment", type: "textarea" },
-];
+interface CourseEditModalProp{
+    register: UseFormRegister<CourseInsert>,
+    handleSubmit: UseFormHandleSubmit<CourseInsert>,
+    errors: FieldErrors<CourseInsert>
+    course: CourseInsert;
+    onClose: () => void;
+    onSave: (updated: CourseInsert) => void;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -76,8 +53,8 @@ function formatDate(d: string | null | undefined): string {
     return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function formatDateForInput(dateStr: string | null | undefined): string {
-    if (!dateStr) return "";
+function formatDateForInput(dateStr: string): string {
+    if (!dateStr || typeof dateStr !== "string") return "";
     return dateStr.split("T")[0];
 }
 
@@ -92,57 +69,24 @@ function fileTypeBadgeClass(ft: string): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENT — Course Edit Modal
+// SUB-COMPONENT — Course Edit Modal (using CourseInsert directly)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CourseEditModal({
     course,
     onClose,
     onSave,
-}: {
-    course: CourseInsert;
-    onClose: () => void;
-    onSave: (updated: CourseInsert) => void;
-}) {
-    const { register, handleSubmit, formState: { errors } } = useForm<CourseEditable>({
-        defaultValues: {
-            code: course.code ?? "",
-            name: course.name ?? "",
-            title: course.title ?? "",
-            programme: course.programme ?? "",
-            degree_type: course.degree_type ?? "",
-            study_option: course.study_option ?? "",
-            description: course.description ?? "",
-            learning_outcomes: course.learning_outcomes ?? "",
-            content: course.content ?? "",
-            prerequisites: course.prerequisites ?? "",
-            assessment: course.assessment ?? "",
-            instructor: course.instructor ?? "",
-            credits: course.credits ?? "",
-            url: course.url ?? "",
-            start_date: formatDateForInput(course.start_date),
-            end_date: formatDateForInput(course.end_date),
-            enrollment_start_date: formatDateForInput(course.enrollment_start_date),
-            enrollment_end_date: formatDateForInput(course.enrollment_end_date),
-        }
-    });
+    register,
+    handleSubmit,
+    errors
+}: CourseEditModalProp) {
 
     const [saving, setSaving] = useState(false);
     const { showNotification } = useNotification();
 
-    /**
-     * Persists the edited course fields via the updateCourseByCourseId server
-     * action and fires the onSave callback with the merged result.
-     */
-    const onSubmit = async (data: CourseEditable) => {
+    const onSubmit = async (data: CourseInsert) => {
         setSaving(true);
-        // Ensure any empty string values for dates/etc. are cleaned/sanitized.
-        const cleanedData = Object.entries(data).reduce((acc, [key, val]) => {
-            acc[key as keyof CourseEditable] = val === "" ? null : val;
-            return acc;
-        }, {} as Record<keyof CourseEditable, any>);
-
-        const { error } = await updateCourseByCourseId(course.id!, cleanedData);
+        const { error } = await updateCourseByCourseId(course.id!, data);
 
         if (error) {
             showNotification(error);
@@ -150,7 +94,7 @@ function CourseEditModal({
             return;
         }
         showNotification("Course updated successfully");
-        onSave({ ...course, ...cleanedData });
+        onSave({ ...course, ...data });
         onClose();
     };
 
@@ -177,6 +121,7 @@ function CourseEditModal({
                             <p className="text-xs text-[#7aa5b0] mt-0.5">{course.code ?? course.name}</p>
                         </div>
                         <button
+                            type="button"
                             onClick={onClose}
                             className="cursor-pointer text-[#7aa5b0] hover:text-[#1a2e35] transition-colors p-1 rounded-lg hover:bg-[#f0f7fa]"
                         >
@@ -184,49 +129,291 @@ function CourseEditModal({
                         </button>
                     </div>
 
-                    {/* Body */}
+                    {/* Body Form */}
                     <form
                         id="course-edit-form"
                         onSubmit={handleSubmit(onSubmit)}
                         className="overflow-y-auto flex-1 px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4"
                     >
-                        {COURSE_FIELDS.map(({ key, label, type }) => {
-                            const isTextArea = type === "textarea";
-                            const isDate = type === "date";
-                            const hasError = !!errors[key];
+                        {/* Code */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Code
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.code ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("code", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.code && (
+                                <p className="text-red-500 text-sm mt-1">{errors.code.message}</p>
+                            )}
+                        </div>
 
-                            return (
-                                <div key={key} className={isTextArea ? "sm:col-span-2" : ""}>
-                                    <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
-                                        {label} {key === "name" && <span className="text-red-500">*</span>}
-                                    </label>
-                                    {isTextArea ? (
-                                        <textarea
-                                            className={`w-full border ${hasError ? "border-red-500 focus:border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
-                                            {...register(key, {
-                                                required: key === "name" ? "Course name is required" : false
-                                            })}
-                                        />
-                                    ) : (
-                                        <input
-                                            type={isDate ? "date" : "text"}
-                                            className={`w-full border ${hasError ? "border-red-500 focus:border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
-                                            {...register(key, {
-                                                required: key === "name" ? "Course name is required" : false,
-                                                validate: isDate
-                                                    ? (value) => !value || !isNaN(Date.parse(value)) || "Please enter a valid date"
-                                                    : undefined
-                                            })}
-                                        />
-                                    )}
-                                    {errors[key] && (
-                                        <p className="text-red-500 text-xs mt-1">
-                                            {errors[key]?.message}
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {/* Name (Required) */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.name ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("name", {
+                                    required: "Course name is required",
+                                    setValueAs: (v) => v === "" ? null : v
+                                })}
+                            />
+                            {errors.name && (
+                                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                            )}
+                        </div>
+
+                        {/* Title */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Title
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.title ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("title", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.title && (
+                                <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                            )}
+                        </div>
+
+                        {/* Programme */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Programme
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.programme ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("programme", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.programme && (
+                                <p className="text-red-500 text-sm mt-1">{errors.programme.message}</p>
+                            )}
+                        </div>
+
+                        {/* Degree Type */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Degree Type
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.degree_type ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("degree_type", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.degree_type && (
+                                <p className="text-red-500 text-sm mt-1">{errors.degree_type.message}</p>
+                            )}
+                        </div>
+
+                        {/* Study Option */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Study Option
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.study_option ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("study_option", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.study_option && (
+                                <p className="text-red-500 text-sm mt-1">{errors.study_option.message}</p>
+                            )}
+                        </div>
+
+                        {/* Instructor */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Instructor
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.instructor ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("instructor", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.instructor && (
+                                <p className="text-red-500 text-sm mt-1">{errors.instructor.message}</p>
+                            )}
+                        </div>
+
+                        {/* Credits */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Credits
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.credits ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("credits", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.credits && (
+                                <p className="text-red-500 text-sm mt-1">{errors.credits.message}</p>
+                            )}
+                        </div>
+
+                        {/* URL */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                URL
+                            </label>
+                            <input
+                                type="text"
+                                className={`w-full border ${errors.url ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("url", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.url && (
+                                <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
+                            )}
+                        </div>
+
+                        {/* Start Date */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Start Date
+                            </label>
+                            <input
+                                type="date"
+                                className={`w-full border ${errors.start_date ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("start_date", {
+                                    setValueAs: (v) => v === "" ? null : v,
+                                    validate: (value) => !value || !isNaN(Date.parse(value as string)) || "Please enter a valid date"
+                                })}
+                            />
+                            {errors.start_date && (
+                                <p className="text-red-500 text-sm mt-1">{errors.start_date.message}</p>
+                            )}
+                        </div>
+
+                        {/* End Date */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                End Date
+                            </label>
+                            <input
+                                type="date"
+                                className={`w-full border ${errors.end_date ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("end_date", {
+                                    setValueAs: (v) => v === "" ? null : v,
+                                    validate: (value) => !value || !isNaN(Date.parse(value as string)) || "Please enter a valid date"
+                                })}
+                            />
+                            {errors.end_date && (
+                                <p className="text-red-500 text-sm mt-1">{errors.end_date.message}</p>
+                            )}
+                        </div>
+
+                        {/* Enroll Start */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Enroll Start
+                            </label>
+                            <input
+                                type="date"
+                                className={`w-full border ${errors.enrollment_start_date ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("enrollment_start_date", {
+                                    setValueAs: (v) => v === "" ? null : v,
+                                    validate: (value) => !value || !isNaN(Date.parse(value as string)) || "Please enter a valid date"
+                                })}
+                            />
+                            {errors.enrollment_start_date && (
+                                <p className="text-red-500 text-sm mt-1">{errors.enrollment_start_date.message}</p>
+                            )}
+                        </div>
+
+                        {/* Enroll End */}
+                        <div>
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Enroll End
+                            </label>
+                            <input
+                                type="date"
+                                className={`w-full border ${errors.enrollment_end_date ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none`}
+                                {...register("enrollment_end_date", {
+                                    setValueAs: (v) => v === "" ? null : v,
+                                    validate: (value) => !value || !isNaN(Date.parse(value as string)) || "Please enter a valid date"
+                                })}
+                            />
+                            {errors.enrollment_end_date && (
+                                <p className="text-red-500 text-sm mt-1">{errors.enrollment_end_date.message}</p>
+                            )}
+                        </div>
+
+                        {/* Description */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Description
+                            </label>
+                            <textarea
+                                className={`w-full border ${errors.description ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                {...register("description", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.description && (
+                                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
+                            )}
+                        </div>
+
+                        {/* Learning Outcomes */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Learning Outcomes
+                            </label>
+                            <textarea
+                                className={`w-full border ${errors.learning_outcomes ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                {...register("learning_outcomes", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.learning_outcomes && (
+                                <p className="text-red-500 text-sm mt-1">{errors.learning_outcomes.message}</p>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Content
+                            </label>
+                            <textarea
+                                className={`w-full border ${errors.content ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                {...register("content", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.content && (
+                                <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+                            )}
+                        </div>
+
+                        {/* Prerequisites */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Prerequisites
+                            </label>
+                            <textarea
+                                className={`w-full border ${errors.prerequisites ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                {...register("prerequisites", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.prerequisites && (
+                                <p className="text-red-500 text-sm mt-1">{errors.prerequisites.message}</p>
+                            )}
+                        </div>
+
+                        {/* Assessment */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold text-[#4a7a85] uppercase tracking-wide mb-1">
+                                Assessment
+                            </label>
+                            <textarea
+                                className={`w-full border ${errors.assessment ? "border-red-500" : "border-[#c8e6ee] focus:border-[#7dd8cc]"} rounded-lg px-3 py-2 text-sm text-[#1a2e35] bg-[#fafeff] focus:outline-none resize-none min-h-[80px]`}
+                                {...register("assessment", { setValueAs: (v) => v === "" ? null : v })}
+                            />
+                            {errors.assessment && (
+                                <p className="text-red-500 text-sm mt-1">{errors.assessment.message}</p>
+                            )}
+                        </div>
                     </form>
 
                     {/* Footer */}
@@ -262,9 +449,10 @@ export default function SourceManagementClient({ sources }: Props) {
 
     // ── State ─────────────────────────────────────────────────────────
     const [sourceList, setSourceList] = useState<SourceInsert[]>(sources);
-
-    // Lazily-loaded courses: keyed by sourceId, undefined = not yet fetched
-    const [courseMap, setCourseMap] = useState<Record<string, CourseInsert[]>>({});
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<CourseInsert>();
+    
+    // Only fetch/hold the courses of the currently expanded source
+    const [activeCourses, setActiveCourses] = useState<CourseInsert[]>([]);
     const [loadingSourceId, setLoadingSourceId] = useState<string | null>(null);
     const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
 
@@ -281,14 +469,13 @@ export default function SourceManagementClient({ sources }: Props) {
 
     // ── Computed stats ────────────────────────────────────────────────
     const totalSources = sourceList.length;
-    const totalCourses = Object.values(courseMap).reduce((s, c) => s + c.length, 0);
+    const totalCourses = activeCourses.length;
     const lastUpdated = sourceList[0]?.updated_at ? formatDate(sourceList[0].updated_at) : "—";
 
     // ── Handlers ──────────────────────────────────────────────────────
 
     /**
-     * Toggles a source row. On first expand, fetches courses lazily via
-     * getCoursesBySourceId and caches them in courseMap.
+     * Toggles the active source row expansion. Lazily loads the nested courses list.
      */
     const handleToggleExpand = async (sourceId: string) => {
         setOpenMenuId(null);
@@ -296,19 +483,18 @@ export default function SourceManagementClient({ sources }: Props) {
         // Collapse if already open
         if (expandedSourceId === sourceId) {
             setExpandedSourceId(null);
+            setActiveCourses([]);
             return;
         }
 
         setExpandedSourceId(sourceId);
-
-        // Courses already cached — skip fetch
-        if (courseMap[sourceId] !== undefined) return;
-
+        setActiveCourses([]); // reset list while loading
         setLoadingSourceId(sourceId);
+
         try {
             const result = await getCoursesBySourceId(sourceId);
             if (result.error) throw new Error(result.error);
-            setCourseMap((prev) => ({ ...prev, [sourceId]: result.data ?? [] }));
+            setActiveCourses(result.data ?? []);
         } catch (err) {
             showNotification(err instanceof Error ? err.message : "Failed to load courses.");
         } finally {
@@ -327,8 +513,7 @@ export default function SourceManagementClient({ sources }: Props) {
     };
 
     /**
-     * Persists the edited source name via updateSourceNameBySourceId server
-     * action and updates local state on success.
+     * Persists the edited source name via updateSourceNameBySourceId server action.
      */
     const handleSaveName = async (sourceId: string) => {
         const { error } = await updateSourceNameBySourceId(sourceId, editingName);
@@ -345,7 +530,7 @@ export default function SourceManagementClient({ sources }: Props) {
     };
 
     /**
-     * Cancels inline source name editing without persisting.
+     * Cancels inline source name editing.
      */
     const handleCancelEditName = () => {
         setEditingSourceId(null);
@@ -353,20 +538,17 @@ export default function SourceManagementClient({ sources }: Props) {
     };
 
     /**
-     * Deletes a source and all its cascaded courses via the server action,
-     * then removes it from local state.
+     * Deletes a source via server action.
      */
     const handleDeleteSource = async (sourceId: string) => {
         setOpenMenuId(null);
         try {
             await deleteSource(sourceId);
             setSourceList((prev) => prev.filter((s) => s.id !== sourceId));
-            setCourseMap((prev) => {
-                const next = { ...prev };
-                delete next[sourceId];
-                return next;
-            });
-            if (expandedSourceId === sourceId) setExpandedSourceId(null);
+            if (expandedSourceId === sourceId) {
+                setExpandedSourceId(null);
+                setActiveCourses([]);
+            }
             showNotification("Source deleted successfully.");
         } catch (err) {
             showNotification(err instanceof Error ? err.message : "Failed to delete source.");
@@ -374,16 +556,18 @@ export default function SourceManagementClient({ sources }: Props) {
     };
 
     /**
-     * Updates local courseMap after a course is saved via the edit modal.
+     * Updates active courses state on successful course edit.
      */
     const handleCourseSaved = (updated: CourseInsert) => {
-        setCourseMap((prev) => ({
-            ...prev,
-            [updated.source_id]: (prev[updated.source_id] ?? []).map((c) =>
-                c.id === updated.id ? updated : c
-            ),
-        }));
+        setActiveCourses((prev) =>
+            prev.map((c) => (c.id === updated.id ? updated : c))
+        );
     };
+
+    const handleChooseEditCourse = (course: CourseInsert)=>{
+        setEditingCourse(course)
+        reset(course)
+    }
 
     // ─────────────────────────────────────────────────────────────────
     // RENDER
@@ -392,7 +576,7 @@ export default function SourceManagementClient({ sources }: Props) {
     return (
         <div className="flex-1 min-h-screen min-w-0 bg-[#f0f7fa] px-4 sm:px-6 lg:px-9 py-5 sm:py-8 flex flex-col gap-5 sm:gap-7 overflow-y-auto overflow-x-hidden">
 
-            {/* ── Page header — mirrors HistoryHeader style ─────────────── */}
+            {/* ── Page header ─────────────── */}
             <motion.div
                 className="flex items-center gap-3 min-w-0"
                 initial={{ opacity: 0, y: -10 }}
@@ -452,7 +636,6 @@ export default function SourceManagementClient({ sources }: Props) {
                     sourceList.map((source, idx) => {
                         const isExpanded = expandedSourceId === source.id;
                         const isLoading = loadingSourceId === source.id;
-                        const courses = courseMap[source.id!];
                         const isEditingThis = editingSourceId === source.id;
 
                         return (
@@ -591,9 +774,9 @@ export default function SourceManagementClient({ sources }: Props) {
                                                 <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8f4f8]">
                                                     <h3 className="text-sm font-bold text-[#1a5c55]">
                                                         Nested Courses
-                                                        {courses !== undefined && (
+                                                        {!isLoading && (
                                                             <span className="ml-2 text-[11px] font-medium text-[#7aa5b0]">
-                                                                ({courses.length})
+                                                                ({activeCourses.length})
                                                             </span>
                                                         )}
                                                     </h3>
@@ -609,7 +792,7 @@ export default function SourceManagementClient({ sources }: Props) {
                                                         />
                                                         <span className="text-sm text-[#7aa5b0]">Loading courses…</span>
                                                     </div>
-                                                ) : courses === undefined ? null : courses.length === 0 ? (
+                                                ) : activeCourses.length === 0 ? (
                                                     <p className="text-sm text-[#7aa5b0] text-center py-8">
                                                         No courses in this source.
                                                     </p>
@@ -625,14 +808,14 @@ export default function SourceManagementClient({ sources }: Props) {
                                                         </div>
 
                                                         {/* Course rows */}
-                                                        {courses.map((course, ci) => (
+                                                        {activeCourses.map((course, ci) => (
                                                             <motion.div
                                                                 key={course.id}
                                                                 className="grid grid-cols-[1fr_auto] sm:grid-cols-[120px_1fr_100px_1fr] gap-4 px-5 py-3 border-b border-[#f0f7fa] last:border-0 hover:bg-[#f0faf9] cursor-pointer transition-colors items-center group"
                                                                 initial={{ opacity: 0, x: -6 }}
                                                                 animate={{ opacity: 1, x: 0 }}
                                                                 transition={{ duration: 0.2, delay: ci * 0.03 }}
-                                                                onClick={() => setEditingCourse(course)}
+                                                                onClick={() => handleChooseEditCourse(course)}
                                                             >
                                                                 <span className="text-sm font-semibold text-[#1a5c55] truncate">
                                                                     {course.code ?? "—"}
@@ -679,6 +862,9 @@ export default function SourceManagementClient({ sources }: Props) {
                         handleCourseSaved(updated);
                         setEditingCourse(null);
                     }}
+                    register={register}
+                    handleSubmit={handleSubmit}
+                    errors={errors}
                 />
             )}
 
