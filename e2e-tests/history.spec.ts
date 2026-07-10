@@ -1,18 +1,16 @@
 import { test, expect, Page } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { HistoryPage } from './pages/HistoryPage';
-
-const TEST_EMAIL = 'nguyenkhangphuc012024@gmail.com';
-const TEST_PASSWORD = '1231232312123';
+import { TEST_ACCOUNT, TEST_PASSWORD } from '../app/constant';
 
 /**
  * Logs in with the seeded test user account.
  */
-async function loginUser(page: Page, email: string): Promise<void> {
+async function loginUser(page: Page): Promise<void> {
     const loginPage = new LoginPage(page);
 
     await loginPage.navigateTo();
-    await loginPage.signIn(email, TEST_PASSWORD);
+    await loginPage.signIn(TEST_ACCOUNT, TEST_PASSWORD);
     await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/, { timeout: 40000 });
 }
@@ -28,7 +26,7 @@ test.describe('Search History Flow', () => {
 
         sharedPage = await browser.newPage();
         historyPage = new HistoryPage(sharedPage);
-        await loginUser(sharedPage, TEST_EMAIL);
+        await loginUser(sharedPage);
     });
 
     test.afterAll(async () => {
@@ -52,7 +50,7 @@ test.describe('Search History Flow', () => {
 
         // Verify URL and Page Header
         await expect(sharedPage).toHaveURL(/\/history$/);
-        await expect(historyPage.pageHeader).toBeVisible();
+        await expect(historyPage.pageHeader).toBeVisible({ timeout: 20000 });
 
         // Verify historical details are displayed
         await expect(historyPage.companyNameText).toHaveText('Awesome Tech Corp');

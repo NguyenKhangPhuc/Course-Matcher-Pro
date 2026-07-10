@@ -48,7 +48,7 @@ const Home = () => {
     }
     return (
         <div className="p-5 flex flex-col justify-center items-center min-h-screen">
-            <form className="flex flex-col gap-2 rounded-[50px] bg-[#e0e0e0] 
+            <form data-testid="forget-password-form" className="flex flex-col gap-2 rounded-[50px] bg-[#e0e0e0] 
                                shadow-template
                                flex flex-col duration-300 p-8 w-[450px] rounded-lg font-roboto-mono" onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col">
@@ -61,6 +61,7 @@ const Home = () => {
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
                         <AlternateEmailIcon />
                         <input
+                            data-testid="forget-password-email-input"
                             type="text"
                             placeholder="Enter your Email"
                             className="flex-1 h-full border-none outline-none px-2 placeholder-gray-400  text-black "
@@ -74,13 +75,13 @@ const Home = () => {
                         />
                     </div>
                     {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p data-testid="forget-password-email-error" className="text-red-500 text-sm mt-1">
                             {errors.email.message}
                         </p>
                     )}
                 </div>
 
-                <button className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Send OTP<i className="animation"></i>
+                <button data-testid="forget-password-submit-btn" className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Send OTP<i className="animation"></i>
                 </button>
 
                 <p className="text-center text-sm text-black mt-3">

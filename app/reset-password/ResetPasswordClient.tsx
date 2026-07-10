@@ -83,6 +83,7 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
                         <HttpsIcon />
                         <input
+                            data-testid="reset-otp-input"
                             type="password"
                             placeholder="Enter your Received OTP"
                             className="flex-1 h-full border-none outline-none px-2 placeholder-gray-400"
@@ -92,7 +93,7 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                         />
                     </div>
                     {errors.otp && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p data-testid="reset-otp-error" className="text-red-500 text-sm mt-1">
                             {errors.otp.message}
                         </p>
                     )}
@@ -103,6 +104,7 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
                         <HttpsIcon />
                         <input
+                            data-testid="reset-new-password-input"
                             type="password"
                             placeholder="Enter your Password"
                             className="flex-1 h-full border-none outline-none px-2 placeholder-gray-400"
@@ -116,7 +118,7 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                         />
                     </div>
                     {errors.newPassword && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p data-testid="reset-new-password-error" className="text-red-500 text-sm mt-1">
                             {errors.newPassword.message}
                         </p>
                     )}
@@ -127,6 +129,7 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">
                         <HttpsIcon />
                         <input
+                            data-testid="reset-confirm-password-input"
                             type="password"
                             placeholder="Confirm your password"
                             className="flex-1 h-full border-none outline-none px-2 placeholder-gray-400"
@@ -145,13 +148,13 @@ export const ResetPasswordClient = ({ email }: { email: string }) => {
                         />
                     </div>
                     {errors.confirmedNewPassword && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p data-testid="reset-confirm-password-error" className="text-red-500 text-sm mt-1">
                             {errors.confirmedNewPassword.message}
                         </p>
                     )}
                 </div>
 
-                <button className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Update Password<i className="animation"></i>
+                <button data-testid="reset-submit-btn" className="mt-5 w-full text-white font-medium rounded-xl text-base uppercase login_btn"><i className="animation"></i>Update Password<i className="animation"></i>
                 </button>
 
                 <p className="text-center text-sm text-black mt-3">

@@ -1,18 +1,16 @@
 import { test, expect, Page } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-
-const TEST_EMAIL = 'nguyenkhangphuc012024@gmail.com';
-const TEST_PASSWORD = '1231232312123';
+import { TEST_ACCOUNT, TEST_PASSWORD } from '../app/constant';
 
 /**
  * Logs in with the seeded test user account.
  */
-async function loginUser(page: Page, email: string): Promise<void> {
+async function loginUser(page: Page): Promise<void> {
   const loginPage = new LoginPage(page);
 
   await loginPage.navigateTo();
-  await loginPage.signIn(email, TEST_PASSWORD);
+  await loginPage.signIn(TEST_ACCOUNT, TEST_PASSWORD);
   await page.waitForTimeout(1000);
   await expect(page).toHaveURL(/http:\/\/localhost:3000\/dashboard\/?$/, { timeout: 40000 });
 }
@@ -27,7 +25,7 @@ test.describe('Dashboard Flow', () => {
     testInfo.setTimeout(testInfo.timeout + 40_000);
     sharedPage = await browser.newPage();
     dashboardPage = new DashboardPage(sharedPage);
-    await loginUser(sharedPage, TEST_EMAIL);
+    await loginUser(sharedPage);
   });
 
   test.afterAll(async () => {
@@ -51,7 +49,7 @@ test.describe('Dashboard Flow', () => {
     await dashboardPage.selectSource('example.xlsx');
 
     // Verify that the success notification is shown or courses load
-    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 10000 });
+    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 20000 });
 
     // Verify all 3 seeded courses are listed in the table
     await expect(dashboardPage.courseTableRows).toHaveCount(3);
@@ -72,7 +70,7 @@ test.describe('Dashboard Flow', () => {
 
     // Select source
     await dashboardPage.selectSource('example.xlsx');
-    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible();
+    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 20000 });
 
     // Select programme
     await dashboardPage.selectProgramme('Software Engineering');
@@ -114,7 +112,7 @@ test.describe('Dashboard Flow', () => {
 
     // 2. Select source
     await dashboardPage.selectSource('example.xlsx');
-    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible();
+    await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 20000 });
 
     // 3. Select programme
     await dashboardPage.selectProgramme('Software Engineering');

@@ -131,6 +131,7 @@ export function SourceRow({
         >
             {/* Source row */}
             <div
+                data-testid="source-row"
                 className={`grid grid-cols-[auto_1fr] sm:grid-cols-[2fr_120px_140px_160px_80px] gap-4 px-6 py-4 items-center cursor-pointer transition-colors ${isExpanded ? "bg-[#f0faf9]" : "hover:bg-[#f7fbfd]"}`}
                 onClick={() => !isEditingName && onToggleExpand(source.id!)}
             >
@@ -168,7 +169,7 @@ export function SourceRow({
                             </button>
                         </div>
                     ) : (
-                        <span className="text-sm font-semibold text-[#1a2e35] truncate">
+                        <span data-testid="source-name" className="text-sm font-semibold text-[#1a2e35] truncate">
                             {source.name}
                         </span>
                     )}
@@ -253,7 +254,7 @@ export function SourceRow({
                         transition={{ duration: 0.28, ease: "easeInOut" }}
                         className="overflow-hidden"
                     >
-                        <div className="border-l-4 border-[#7dd8cc] ml-6 mr-4 mb-4 rounded-xl bg-[#fafeff] overflow-hidden max-h-80 overflow-y-auto scrollbar-thin">
+                        <div data-testid="nested-courses-panel" className="border-l-4 border-[#7dd8cc] ml-6 mr-4 mb-4 rounded-xl bg-[#fafeff] overflow-hidden max-h-80 overflow-y-auto scrollbar-thin">
                             {/* Sub-header */}
                             <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8f4f8]">
                                 <h3 className="text-sm font-bold text-[#1a5c55]">
@@ -294,6 +295,7 @@ export function SourceRow({
                                     {/* Course rows */}
                                     {activeCourses.map((course, ci) => (
                                         <motion.div
+                                            data-testid="course-row"
                                             key={course.id}
                                             className="grid grid-cols-[1fr_auto] sm:grid-cols-[120px_1fr_100px_1fr] gap-4 px-5 py-3 border-b border-[#f0f7fa] last:border-0 hover:bg-[#f0faf9] cursor-pointer transition-colors items-center group"
                                             initial={{ opacity: 0, x: -6 }}

@@ -258,7 +258,7 @@ export default function SourceManagementClient({ sources }: Props) {
                     <StorageIcon sx={{ fontSize: 20 }} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                    <h1 className="text-lg font-bold text-[#1a2e35] leading-tight">Source Management</h1>
+                    <h1 data-testid="source-management-heading" className="text-lg font-bold text-[#1a2e35] leading-tight">Source Management</h1>
                     <p className="text-xs text-[#6b9daa]">
                         Manage academic data streams and nested course definitions.
                     </p>
@@ -280,6 +280,7 @@ export default function SourceManagementClient({ sources }: Props) {
 
             {/* Sources table card */}
             <motion.div
+                data-testid="sources-table"
                 className="bg-white rounded-2xl border border-[#d6edf5] overflow-hidden shadow-sm"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -302,7 +303,7 @@ export default function SourceManagementClient({ sources }: Props) {
 
                 {/* Rows */}
                 {sourceList.length === 0 ? (
-                    <p className="text-sm text-[#7aa5b0] text-center py-12">No sources found.</p>
+                    <p data-testid="empty-sources-message" className="text-sm text-[#7aa5b0] text-center py-12">No sources found.</p>
                 ) : (
                     sourceList.map((source, idx) => (
                         <SourceRow
