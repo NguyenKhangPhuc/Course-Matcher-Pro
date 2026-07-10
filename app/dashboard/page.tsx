@@ -14,7 +14,7 @@ import DashboardClient from "./DashboardClient";
 export default async function DashboardServer() {
   const { data, error } = await getUser();
 
-  const sources = await getUserSources();
+  const sources = await getUserSources(true);
 
   return (
     <DashboardClient

@@ -1,5 +1,6 @@
 'use server'
 
+import { CourseInsert } from '../types/course';
 import { createClient } from '../utils/supabase/server'
 
 export async function getCoursesBySourceId(sourceId: string) {
@@ -24,7 +25,11 @@ export async function getCoursesBySourceId(sourceId: string) {
     credits,
     url,
     searchable_text,
-    created_at
+    created_at,
+    start_date,
+    end_date,
+    enrollment_start_date,
+    enrollment_end_date
   `).eq('source_id', sourceId)
 
     if (error){
@@ -68,19 +73,16 @@ export async function getUniqueProgrammeBySourceId(
  */
 export async function updateCourseByCourseId(
   courseId: string,
-  payload: Partial<Omit<import('../types/course').CourseInsert, 'id' | 'source_id' | 'embedding' | 'searchable_text' | 'created_at'>>
+  payload: Partial<CourseInsert>
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
 
   // Sanitize empty strings to null to prevent database casting errors (e.g. invalid date formats)
-  const sanitizedPayload = Object.entries(payload).reduce((acc, [key, value]) => {
-    acc[key] = value === "" ? null : value;
-    return acc;
-  }, {} as any);
+
 
   const { error } = await supabase
     .from('courses')
-    .update(sanitizedPayload)
+    .update(payload)
     .eq('id', courseId);
 
   if (error) {
@@ -88,4 +90,4 @@ export async function updateCourseByCourseId(
   }
 
   return {};
-}
+}

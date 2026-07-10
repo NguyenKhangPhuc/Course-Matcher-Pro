@@ -19,7 +19,7 @@ export default async function SourceManagementPage() {
     if (error || !data.user) redirect("/login");
 
     // ── Sources only — courses are fetched lazily on the client ───────
-    const sources: SourceInsert[] = await getUserSources();
+    const sources: SourceInsert[] = await getUserSources(false);
 
     return (
         <SourceManagementClient

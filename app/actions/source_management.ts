@@ -454,7 +454,7 @@ export async function uploadAndEmbedCourses(
  * @returns Array of SourceRow objects, ordered by created_at descending.
  * @throws  Error if the user is not authenticated.
  */
-export async function getUserSources(): Promise<SourceInsert[]> {
+export async function getUserSources(is_default: boolean): Promise<SourceInsert[]> {
   const supabase = await createClient();
 
   const {
@@ -469,7 +469,7 @@ export async function getUserSources(): Promise<SourceInsert[]> {
   const { data, error } = await supabase
     .from("sources")
     .select("*")
-    .or(`user_id.eq.${user.id},is_default.eq.true`)
+    .or(`user_id.eq.${user.id},is_default.eq.${is_default}`)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -576,4 +576,4 @@ export async function updateSourceNameBySourceId(
   }
 
   return {};
-}
+}
