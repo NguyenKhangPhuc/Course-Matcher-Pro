@@ -124,10 +124,10 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
 
       {/* ── Bottom actions ────────────────────────────── */}
       <div className="nav-bottom">
-        <Link href="/help" className="nav-bottom-btn">
+        {/* <Link href="/help" className="nav-bottom-btn">
           <HelpCircle size={18} strokeWidth={1.8} />
           <span>Help</span>
-        </Link>
+        </Link> */}
 
         <button onClick={handleLogout} className="nav-bottom-btn nav-signout">
           <LogOut size={18} strokeWidth={1.8} />

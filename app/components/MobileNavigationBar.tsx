@@ -186,14 +186,14 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
 
                         {/* Bottom actions */}
                         <div className="flex flex-col gap-1 pt-4 border-t border-[#c8e6ee]">
-                            <Link
+                            {/* <Link
                                 href="/help"
                                 onClick={close}
                                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#d4eef5] hover:text-[#1a5c55] transition-colors"
                             >
                                 <HelpCircle size={18} strokeWidth={1.8} className="text-[#7aa5b0]" />
                                 Help
-                            </Link>
+                            </Link> */}
                             <button
                                 onClick={handleLogout}
                                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#fde8e8] hover:text-[#c0392b] transition-colors w-full text-left"
