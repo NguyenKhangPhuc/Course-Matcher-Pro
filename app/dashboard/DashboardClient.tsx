@@ -33,6 +33,7 @@ import { useLoader } from "../context/LoaderContext";
 import { CourseDataSection } from "./components/CourseDataSection";
 import { TargetJobForm, JobForm } from "./components/TargetJobForm";
 import { AnalysisResultsSection } from "./components/AnalysisResultsSection";
+import axios from "axios";
 
 export default function DashboardClient({ user, initialSources }: { user: User; initialSources: SourceInsert[] }) {
     const [sources, setSources] = useState<SourceInsert[]>(initialSources);
@@ -320,18 +321,40 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                         }, 5000);
                     } else if (type === "error") {
                         const chunk = data as ErrorChunk;
+                        console.log(chunk)
                         setIsAnalyzing(false);
-
+                        // console.log(chunk)
                         // Fix: Gọi thẳng notification ở đây thay vì throw lỗi vô định
-                        showNotification(chunk.data || "Analysis failed.");
-                        console.error("Stream Error:", chunk.data);
+                        showNotification(chunk || "Analysis failed.");
+                        // console.error("Stream Error:", chunk.data);
                         return;
                     }
                 }
             );
         } catch (err) {
             setIsAnalyzing(false);
-            showNotification(err instanceof Error ? err.message : "Analysis failed.");
+            console.log(err);
+            let errorMessage = "Analysis failed.";
+
+            if (axios.isAxiosError(err)) {
+                const rawData = err.response?.data;
+                if (typeof rawData === "string") {
+                    try {
+                        const parsed = JSON.parse(rawData);
+                        errorMessage = parsed.error ?? parsed.message ?? err.message;
+                    } catch {
+                        errorMessage = rawData || err.message;
+                    }
+                } else if (rawData && typeof rawData === "object") {
+                    errorMessage = rawData.error ?? rawData.message ?? err.message;
+                } else {
+                    errorMessage = err.message;
+                }
+            } else if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+
+            showNotification(errorMessage);
         }
     };
 

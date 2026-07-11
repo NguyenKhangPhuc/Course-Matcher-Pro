@@ -243,7 +243,6 @@ export function SourceRow({
                 </div>
             </div>
 
-            {/* Nested courses panel */}
             <AnimatePresence initial={false}>
                 {isExpanded && (
                     <motion.div

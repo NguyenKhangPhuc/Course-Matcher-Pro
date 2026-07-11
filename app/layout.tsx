@@ -44,7 +44,7 @@ export default function RootLayout({
             <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
             <Loader />
             <Notification />
-            <main className="flex-1 md:mt-0 mt-10 flex flex-col min-h-screen">
+            <main className="flex-1 md:mt-0 mt-15 flex flex-col min-h-screen">
               <div className="flex-1">
                 {children}
               </div>

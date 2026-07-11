@@ -48,7 +48,7 @@ const Home = () => {
     }
     return (
         <div className="p-5 flex flex-col justify-center items-center min-h-screen">
-            <form data-testid="forget-password-form" className="flex flex-col gap-2 rounded-[50px] bg-[#e0e0e0] 
+            <form data-testid="forget-password-form" className="flex flex-col gap-2 rounded-[50px] bg-[#ffffff] 
                                shadow-template
                                flex flex-col duration-300 p-8 w-[450px] rounded-lg font-roboto-mono" onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col">

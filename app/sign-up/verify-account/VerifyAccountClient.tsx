@@ -44,10 +44,9 @@ export const VerifyAccount = ({ email }: { email: string }) => {
     }
     return (
         <div className='min-h-screen w-full flex justify-center items-center'>
-
-            <form className="flex flex-col gap-2 rounded-[50px] bg-[#e0e0e0] 
-                               shadow-[20px_20px_60px_#bebebe,-20px_-20px_60px_#ffffff]
-                               flex flex-col duration-300 p-8 w-[450px] rounded-2xl font-roboto-mono" onSubmit={handleSubmit(onSubmit)}>
+            <form className="flex flex-col gap-2 rounded-[50px] bg-[#ffffff] 
+                               shadow-template
+                               flex flex-col duration-300 p-8 w-[450px] rounded-lg font-roboto-mono" onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex flex-col">
                     <label className="text-[#151717] mb-1 font-semibold">Email</label>
                     <div className="border border-gray-200 rounded-xl h-12 flex items-center px-2 focus-within:border-blue-600 transition text-black/50">

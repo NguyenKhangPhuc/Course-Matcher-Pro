@@ -17,10 +17,7 @@ export interface DoneResponse {
 
 // 1. Định nghĩa chi tiết từng loại Chunk từ Stream đổ về
 
-export type ErrorChunk = {
-    type: 'error';
-    data: string;
-}
+export type ErrorChunk = string
 
 // 2. Gộp lại thành một Union Type
 export type AgentStreamChunk = string | CourseAgentResponse | DoneResponse | ErrorChunk;
