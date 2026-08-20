@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
  * Page Object for the Dashboard page ("/dashboard").
@@ -14,6 +14,7 @@ export class DashboardPage {
   readonly courseTable: Locator;
   readonly courseTableRows: Locator;
   readonly programmeSelect: Locator;
+  readonly periodSelect: Locator;
   readonly sourcePills: Locator;
 
   // Target Job Form
@@ -52,6 +53,7 @@ export class DashboardPage {
 
     // Now using getByLabel because of the added htmlFor/id connection
     this.programmeSelect = page.getByLabel('Programme');
+    this.periodSelect = page.getByTestId('period-select');
     this.sourcePills = page.locator('.dashboard-pill');
 
     // Target Job Form
@@ -91,6 +93,11 @@ export class DashboardPage {
 
   async selectProgramme(programme: string) {
     await this.programmeSelect.selectOption({ label: programme });
+  }
+
+  async selectPeriod(periodValue: string = 'all') {
+    await expect(this.periodSelect).toBeVisible({ timeout: 40000 });
+    await this.periodSelect.selectOption({ value: periodValue });
   }
 
   async fillJobForm(company: string, position: string, jobDesc: string) {

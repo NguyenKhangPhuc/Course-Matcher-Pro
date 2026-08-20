@@ -72,8 +72,9 @@ test.describe('Dashboard Flow', () => {
     await dashboardPage.selectSource('example.xlsx');
     await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 20000 });
 
-    // Select programme
+    // Select programme and period
     await dashboardPage.selectProgramme('Software Engineering');
+    await dashboardPage.selectPeriod('all');
 
     // Submit form directly
     await dashboardPage.submitJobForm();
@@ -114,8 +115,9 @@ test.describe('Dashboard Flow', () => {
     await dashboardPage.selectSource('example.xlsx');
     await expect(sharedPage.getByText('Load the courses successfully')).toBeVisible({ timeout: 20000 });
 
-    // 3. Select programme
+    // 3. Select programme and period
     await dashboardPage.selectProgramme('Software Engineering');
+    await dashboardPage.selectPeriod('all');
 
     // 4. Fill job description form
     await dashboardPage.fillJobForm(
