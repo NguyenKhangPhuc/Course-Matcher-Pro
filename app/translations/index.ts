@@ -93,6 +93,8 @@ export const translations = {
       editModalTitle: "Edit Course Details",
       saveChanges: "Save Changes",
       cancel: "Cancel",
+      storageUsed: "Storage Used",
+      recordsSuffix: "records",
     },
     // History
     history: {
@@ -249,6 +251,8 @@ export const translations = {
       editModalTitle: "Muokkaa kurssin tietoja",
       saveChanges: "Tallenna muutokset",
       cancel: "Peruuta",
+      storageUsed: "Käytetty tallennustila",
+      recordsSuffix: "tietuetta",
     },
     // History
     history: {
