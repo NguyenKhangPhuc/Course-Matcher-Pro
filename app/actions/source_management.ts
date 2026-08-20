@@ -201,7 +201,6 @@ async function embedCourses(
 
     const results = await Promise.allSettled(
       batch.map(async (course, index) => {
-        const identifier = course.code || course.name || "unknown";
         const searchableText = buildSearchableText(course);
         if (index < 3) { // chỉ log 3 course đầu
           // console.log('=== Course:', course.code);
@@ -303,8 +302,8 @@ async function batchInsertCourses(
 
   // Tất cả batches chạy song song — không sequential
   const results = await Promise.all(
-    batches.map((batch, index) => {
-      // console.log("Insered batch " + index)
+    batches.map((batch) => {
+      // console.log("Insered batch")
       return supabase.from("courses").insert(batch).select("id")
     }
     )

@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, History, HelpCircle, LogOut, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { useNotification } from "../context/Notification";
 import { signout } from "../actions/authentication";
 import Image from 'next/image'
 import { NAV_ITEMS } from "./NavigationBarClient";
+
 // =====================================================================
 // TYPES & CONSTANTS
 // =====================================================================
 
 interface MobileNavigationBarProps {
-    user: User | null;
+    user?: User | null;
 }
 
 // =====================================================================
@@ -28,6 +29,7 @@ interface MobileNavigationBarProps {
  * Responsive mobile navigation bar shown only on small screens (md:hidden).
  * Features an animated hamburger button and a slide-in drawer overlay.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);

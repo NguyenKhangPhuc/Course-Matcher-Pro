@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { LayoutDashboard, History, HelpCircle, LogOut, Database } from "lucide-react";
-import { createClient } from "../utils/supabase/client";
+import { LayoutDashboard, History, LogOut, Database } from "lucide-react";
 import { signout } from "../actions/authentication";
 import { useNotification } from "../context/Notification";
 import Image from 'next/image'
@@ -15,13 +14,7 @@ import Image from 'next/image'
 // =====================================================================
 
 interface NavigationBarClientProps {
-  user: User | null;
-}
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
+  user?: User | null;
 }
 
 // =====================================================================
@@ -51,6 +44,12 @@ export const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+}
+
 // =====================================================================
 // COMPONENT
 // =====================================================================
@@ -64,9 +63,9 @@ export const NAV_ITEMS: NavItem[] = [
  * Highlights the active route, handles sign-out, and shows the
  * user's email initial in the bottom avatar area.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function NavigationBarClient({ user }: NavigationBarClientProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { showNotification } = useNotification()
   const handleLogout = async () => {
     try {
@@ -79,9 +78,6 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
       }
     }
   }
-
-  const userInitial = user?.email?.charAt(0).toUpperCase() ?? "?";
-  const userEmail = user?.email ?? "";
 
   return (
     <aside className="nav-sidebar">

@@ -16,7 +16,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FieldErrors, useForm, UseFormHandleSubmit, UseFormRegister } from "react-hook-form";
+import { FieldErrors, UseFormHandleSubmit, UseFormRegister } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { Close } from "@mui/icons-material";
 import { CourseInsert } from "../../types/course";

@@ -21,18 +21,25 @@ const NotificationContext = createContext<NotificationProviderValueType | undefi
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
     // Notification controller
     const [notification, setNotification] = useState<NotificationContextType>({ content: null, isOpen: false });
-    const notificationSound = typeof window !== 'undefined' ? new Audio('/sound/notification.mp3') : null;
-    if (notificationSound) {
-        // 2. Giảm âm lượng tại đây (Ví dụ: 0.3 là 30% âm lượng)
-        notificationSound.volume = 0.2;
-    }
+
     const showNotification = (content: string) => {
         setNotification({ content, isOpen: true });
-        notificationSound!.play();
+        if (typeof window !== 'undefined') {
+            try {
+                const sound = new Audio('/sound/notification.mp3');
+                sound.volume = 0.2;
+                sound.play()?.catch(() => {
+                    // Ignore audio autoplay/unsupported media errors (e.g. headless Playwright test runners)
+                });
+            } catch {
+                // Ignore audio initialization errors
+            }
+        }
         setTimeout(() => {
             setNotification({ content: null, isOpen: false });
-        }, 3000)
-    }
+        }, 3000);
+    };
+
     return (
         <NotificationContext.Provider value={{ notification, setNotification, showNotification }}>
             {children}

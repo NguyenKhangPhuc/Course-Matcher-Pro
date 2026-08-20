@@ -1,6 +1,5 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '../utils/supabase/server'
 import { LoginForm, ResetPasswordForm, SignupForm, VerifyAccountForm } from '../types/authentication'
@@ -37,7 +36,7 @@ export async function signup(formData: SignupForm, origin: string) {
     // in practice, you should validate your inputs
 
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: { data: { full_name: formData.fullName, email: formData.email }, emailRedirectTo: `${origin}/auth/callback`, }

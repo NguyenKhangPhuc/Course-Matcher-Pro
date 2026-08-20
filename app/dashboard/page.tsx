@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getUser } from "../actions/authentication";
 import { getUserSources } from "../actions/source_management";
 import DashboardClient from "./DashboardClient";
@@ -12,7 +11,7 @@ import DashboardClient from "./DashboardClient";
  * Redirects to /login if the user is not authenticated.
  */
 export default async function DashboardServer() {
-  const { data, error } = await getUser();
+  const { data } = await getUser();
 
   const sources = await getUserSources(true);
 

@@ -335,60 +335,26 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     end_date,
                 },
                 (type, data) => {
-                    const normalizedType = (type || "").toLowerCase().trim();
-
-                    const isReq = [
-                        "requirements",
-                        "requirement",
-                        "technical_requirements",
-                        "technical_requirement",
-                        "skills",
-                        "skill",
-                    ].includes(normalizedType);
-
-                    const isCourse = ["course", "courses", "matched_course", "matched_courses"].includes(normalizedType);
-                    const isDone = ["done", "complete", "completed", "end", "finished", "finish"].includes(normalizedType);
-                    const isError = ["error", "err", "failed", "failure"].includes(normalizedType);
-
-                    if (isReq) {
-                        let extractedText = "";
-                        if (typeof data === "string") {
-                            extractedText = data;
-                        } else if (data && typeof data === "object") {
-                            extractedText =
-                                (data as any).technical_requirements ||
-                                (data as any).requirements ||
-                                (data as any).text ||
-                                (data as any).data ||
-                                (data as any).content ||
-                                JSON.stringify(data);
-                        }
-
-                        if (extractedText) {
-                            localAgentResult.technical_requirements = extractedText;
-                            setAgentResult({ ...localAgentResult });
-                        }
-                    } else if (isCourse) {
+                    if (type === "requirements") {
+                        localAgentResult.technical_requirements = data as string;
+                        setAgentResult({ ...localAgentResult });
+                    } else if (type === "course") {
                         localAgentResult.courses.push(data as CourseAgentResponse);
                         setAgentResult({ ...localAgentResult });
-                    } else if (isDone) {
+                    } else if (type === "done") {
                         const chunk = data as DoneResponse;
-                        const summary =
-                            typeof data === "string"
-                                ? data
-                                : chunk?.summary || "AI matching has successfully analyzed the description.";
-                        showNotification(summary);
+                        showNotification(chunk?.summary || "AI matching has successfully analyzed the description.");
                         setTimeout(() => {
                             setShowSaveModal(true);
                         }, 5000);
-                    } else if (isError) {
+                    } else if (type === "error") {
                         const chunk = data as ErrorChunk;
                         showNotification(chunk || "Analysis failed.");
                     }
                 }
             );
         } catch (err) {
-            console.log(err);
+            // console.log(err);
             let errorMessage = "Analysis failed.";
 
             if (axios.isAxiosError(err)) {

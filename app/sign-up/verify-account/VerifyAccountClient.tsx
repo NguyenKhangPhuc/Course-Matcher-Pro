@@ -1,8 +1,6 @@
 'use client'
-import { createClient } from "@supabase/supabase-js";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import HttpsIcon from '@mui/icons-material/Https';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -17,7 +15,6 @@ export const VerifyAccount = ({ email }: { email: string }) => {
         register,
         handleSubmit,
         formState: { errors },
-        control,
     } = useForm<VerifyAccountForm>({
         defaultValues: {
             email

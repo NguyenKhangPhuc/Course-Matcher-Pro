@@ -10,7 +10,7 @@ export default async function HistoryPage() {
     redirect("/login");
   }
 
-  const { data: searchHistories, error: historyError } = await getSearchHistoryWithMatches(data.user.id);
+  const { data: searchHistories } = await getSearchHistoryWithMatches(data.user.id);
 
   return (
     <HistoryClient 

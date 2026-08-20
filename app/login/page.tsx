@@ -52,7 +52,7 @@ const Home = () => {
                         await resendVerificationCode(userInfo.email, window.location.origin)
                         showNotification('Please verify your email')
                         router.push(`/sign-up/verify-account?email=${userInfo.email}`)
-                    } catch (error) {
+                    } catch {
                         showNotification('Failed to send verification code')
                     }
                 } else if (error instanceof Error && error.message == AUTH_ERROR_CODE.INVALID_CREDENTIALS) {

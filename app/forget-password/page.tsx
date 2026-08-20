@@ -1,11 +1,9 @@
 'use client'
-import HttpsIcon from '@mui/icons-material/Https';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { createClient } from '../utils/supabase/client';
-import { login } from '../actions/authentication';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { useRouter } from 'next/navigation';
 import { useLoader } from '../context/LoaderContext';
@@ -32,7 +30,7 @@ const Home = () => {
     const onSubmit = async (userInfo: LoginForm) => {
         setIsOpenLoader({ isOpen: true })
         try {
-            const { data, error } = await supabase.auth.resetPasswordForEmail(userInfo.email)
+            const { error } = await supabase.auth.resetPasswordForEmail(userInfo.email)
             if (error) {
                 throw new Error('Failed to send the verification code')
             }

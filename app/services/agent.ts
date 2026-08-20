@@ -24,10 +24,11 @@ export const analyzeJobDescriptionStreamingAxios = async (
 
         // 2. Lắng nghe tiến trình tải về để cấu trúc lại stream
         onDownloadProgress: (progressEvent: AxiosProgressEvent) => {
-            const target = progressEvent.event?.target || (progressEvent as any).target || (progressEvent as any).currentTarget;
+            const pe = progressEvent as unknown as Record<string, unknown>;
+            const target = (progressEvent.event?.target || pe.target || pe.currentTarget) as { response?: unknown } | null;
             const rawResponse: string = (target && typeof target.response === "string")
                 ? target.response
-                : (typeof (progressEvent as any).response === "string" ? (progressEvent as any).response : "");
+                : (typeof pe.response === "string" ? (pe.response as string) : "");
 
             // Chỉ lấy phần dữ liệu mới trả về kể từ lần callback trước
             const chunk = rawResponse.substring(seenBytes);
@@ -69,7 +70,7 @@ export const analyzeJobDescriptionStreamingAxios = async (
                 try {
                     const parsed = JSON.parse(jsonStr);
                     onChunk(parsed.type, parsed.data);
-                } catch (e) {
+                } catch {
                     // Ignored incomplete trailing chunk
                 }
             }
