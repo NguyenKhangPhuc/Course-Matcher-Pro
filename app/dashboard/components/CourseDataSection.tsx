@@ -23,6 +23,8 @@ import { TableChart, CloudUpload } from "@mui/icons-material";
 import { SourceInsert } from "../../types/source";
 import { CourseInsert } from "../../types/course";
 import { motion } from "framer-motion";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 interface CourseDataSectionProps {
     sources: SourceInsert[];
@@ -51,6 +53,8 @@ export function CourseDataSection({
     selectedPeriod,
     onSelectPeriod,
 }: CourseDataSectionProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
     const [isDragging, setIsDragging] = useState(false);
     const currentYear = new Date().getFullYear();
     const nextYear = currentYear + 1;
@@ -157,7 +161,7 @@ export function CourseDataSection({
                 transition={{ delay: 0.1 }}
             >
                 <TableChart fontSize="small" className="dashboard-section-icon" />
-                Course Data
+                {t.dashboard.courseDataTitle}
             </motion.h2>
 
             {/* Source pills */}
@@ -208,7 +212,7 @@ export function CourseDataSection({
                 >
                     <div className="flex items-center gap-2">
                         <label htmlFor="programme-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
-                            Programme
+                            {t.dashboard.programme}
                         </label>
 
                         <motion.select
@@ -243,7 +247,7 @@ export function CourseDataSection({
                             transition-colors
                         "
                         >
-                            <option value="">Choose your programme</option>
+                            <option value="">{t.dashboard.chooseProgramme}</option>
                             {programmes.map((p) => (
                                 <option key={p} value={p}>
                                     {p}
@@ -254,7 +258,7 @@ export function CourseDataSection({
 
                     <div className="flex items-center gap-2">
                         <label htmlFor="period-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
-                            Period
+                            {t.dashboard.period}
                         </label>
 
                         <motion.select
@@ -290,13 +294,13 @@ export function CourseDataSection({
                             transition-colors
                         "
                         >
-                            <option value="">Choose your period</option>
-                            <option value="1">1. period: weeks 34–43 (18.8.–26.10.{currentYear})</option>
-                            <option value="2">2. period: weeks 44–52 (27.10.–31.12.{currentYear})</option>
-                            <option value="3">3. period: weeks 1–10 (1.1.–8.3.{nextYear})</option>
-                            <option value="4">4. period: weeks 11–18 (9.3.–3.5.{nextYear})</option>
-                            <option value="5">5. period: weeks 19–31 (4.5.–31.7.{nextYear})</option>
-                            <option value="all">All periods</option>
+                            <option value="">{language.language === 'fi' ? "Valitse periodi" : "Choose your period"}</option>
+                            <option value="1">{language.language === 'fi' ? `1. periodi: viikot 34–43 (18.8.–26.10.${currentYear})` : `1. period: weeks 34–43 (18.8.–26.10.${currentYear})`}</option>
+                            <option value="2">{language.language === 'fi' ? `2. periodi: viikot 44–52 (27.10.–31.12.${currentYear})` : `2. period: weeks 44–52 (27.10.–31.12.${currentYear})`}</option>
+                            <option value="3">{language.language === 'fi' ? `3. periodi: viikot 1–10 (1.1.–8.3.${nextYear})` : `3. period: weeks 1–10 (1.1.–8.3.${nextYear})`}</option>
+                            <option value="4">{language.language === 'fi' ? `4. periodi: viikot 11–18 (9.3.–3.5.${nextYear})` : `4. period: weeks 11–18 (9.3.–3.5.${nextYear})`}</option>
+                            <option value="5">{language.language === 'fi' ? `5. periodi: viikot 19–31 (4.5.–31.7.${nextYear})` : `5. period: weeks 19–31 (4.5.–31.7.${nextYear})`}</option>
+                            <option value="all">{t.dashboard.allPeriods}</option>
                         </motion.select>
                     </div>
                 </motion.div>
@@ -308,10 +312,10 @@ export function CourseDataSection({
                     <table className="dashboard-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Code</th>
-                                <th>Credits</th>
-                                <th>Learning outcomes</th>
+                                <th>{t.dashboard.tableName}</th>
+                                <th>{t.dashboard.tableCode}</th>
+                                <th>{t.dashboard.tableCredits}</th>
+                                <th>{t.dashboard.tableOutcomes}</th>
                             </tr>
                         </thead>
 
@@ -406,13 +410,13 @@ export function CourseDataSection({
 
                         <span className="dashboard-dropzone-text">
                             {isDragging
-                                ? "Drop to upload"
-                                : "Drag and drop file here"}
+                                ? (language.language === 'fi' ? "Pudota ladataksesi" : "Drop to upload")
+                                : t.dashboard.dragDropText}
                         </span>
 
                         <span className="dashboard-dropzone-sub">
-                            Support for <strong>Excel</strong>, <strong>CSV</strong>,{" "}
-                            <strong>JSON</strong> files
+                            {language.language === 'fi' ? "Tuetut tiedostomuodot: " : "Support for "}<strong>Excel</strong>, <strong>CSV</strong>,{" "}
+                            <strong>JSON</strong> {language.language === 'fi' ? "-tiedostot" : "files"}
                         </span>
                     </>
                 )}

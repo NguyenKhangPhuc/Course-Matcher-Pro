@@ -2,6 +2,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useLanguage } from "./context/LanguageContext";
+import { translations } from "./translations";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 24 },
@@ -23,6 +25,9 @@ const container = {
 };
 
 function HeroSection() {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     return (
         <motion.section
             initial="hidden"
@@ -40,7 +45,7 @@ function HeroSection() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="inline-flex items-center self-start gap-1.5 text-[11px] font-bold tracking-[0.1em] uppercase text-[#1a5c55] bg-[#e8faf8] border border-[#7dd8cc] rounded-full px-3.5 py-1 mb-5"
                 >
-                    Academic Distinction
+                    {t.home.badge}
                 </motion.span>
 
                 <motion.h1
@@ -48,7 +53,7 @@ function HeroSection() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="text-4xl sm:text-5xl lg:text-[58px] font-extrabold text-[#1a2e35] leading-[1.05] tracking-[-0.02em] mb-4"
                 >
-                    Course Matcher<br />Pro
+                    {t.home.titleLine1}<br />{t.home.titleLine2}
                 </motion.h1>
 
                 <motion.p
@@ -56,7 +61,7 @@ function HeroSection() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="text-base sm:text-lg font-semibold text-[#1a5c55] leading-snug mb-4"
                 >
-                    Find your suitable course with only one click.
+                    {t.home.tagline}
                 </motion.p>
 
                 <motion.p
@@ -64,11 +69,7 @@ function HeroSection() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="text-sm sm:text-[15px] text-[#6b9daa] leading-relaxed max-w-[480px] mb-8"
                 >
-                    A platform built to help students discover courses that align with
-                    real-world job requirements — using data from their university or
-                    custom files they upload (Excel, CSV, JSON). Powered by semantic
-                    search and AI analysis, so every match is grounded in actual
-                    course content, not just keywords.
+                    {t.home.description}
                 </motion.p>
 
                 <motion.div
@@ -81,7 +82,7 @@ function HeroSection() {
                             href="/dashboard"
                             className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-[#1a2e35] text-white rounded-xl text-sm font-bold tracking-[0.01em] no-underline transition-colors hover:bg-[#1a5c55] w-full sm:w-auto"
                         >
-                            Get started →
+                            {t.home.getStarted}
                         </Link>
                     </motion.div>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
@@ -89,7 +90,7 @@ function HeroSection() {
                             href="#features"
                             className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-transparent text-[#1a2e35] border border-[#d6edf5] rounded-xl text-sm font-semibold no-underline transition-colors hover:border-[#7dd8cc] hover:text-[#1a5c55] w-full sm:w-auto"
                         >
-                            See how it works
+                            {t.home.seeHowItWorks}
                         </Link>
                     </motion.div>
                 </motion.div>
@@ -122,6 +123,9 @@ function HeroSection() {
 }
 
 function FeatureGrid() {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     return (
         <section id="features" className="flex flex-col gap-4 lg:gap-6 px-5 pb-16 lg:pb-20 lg:px-20 max-w-7xl mx-auto w-full">
 
@@ -153,14 +157,10 @@ function FeatureGrid() {
                         </svg>
                     </div>
                     <h2 className="text-xl lg:text-[22px] font-extrabold text-[#1a2e35] leading-tight tracking-[-0.01em] m-0">
-                        Course Analysis Dashboard
+                        {t.home.dashboardTitle}
                     </h2>
                     <p className="text-sm text-[#6b9daa] leading-[1.75] m-0">
-                        Upload your course catalogue in any supported format — Excel,
-                        CSV, or JSON — and paste a job description. The AI extracts
-                        the technical requirements, runs a semantic search across your
-                        course library, and surfaces the most relevant matches with
-                        match scores and plain-language explanations.
+                        {t.home.dashboardDesc}
                     </p>
                 </div>
             </motion.div>
@@ -194,14 +194,10 @@ function FeatureGrid() {
                         </svg>
                     </div>
                     <h2 className="text-xl lg:text-[22px] font-extrabold text-[#1a2e35] leading-tight tracking-[-0.01em] m-0">
-                        Search History
+                        {t.home.historyTitle}
                     </h2>
                     <p className="text-sm text-[#6b9daa] leading-[1.75] m-0">
-                        Every analysis is saved so you can return to it at any time.
-                        Compare matched courses across different job descriptions,
-                        track how requirements shift between roles, and build a
-                        personal record of course–career alignment — all from one
-                        organised view.
+                        {t.home.historyDesc}
                     </p>
                 </div>
             </motion.div>

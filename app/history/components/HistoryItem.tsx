@@ -22,6 +22,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ExpandMore, Delete } from "@mui/icons-material";
 import { SearchHistoryWithMatches } from "../../types/search_history";
 import { CourseMatchCard } from "./CourseMatchCard";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 interface HistoryItemProps {
     item: SearchHistoryWithMatches;
@@ -31,25 +33,6 @@ interface HistoryItemProps {
     deletingId: string | null;
 }
 
-/**
- * BEHAVIORAL MECHANISM:
- * Formats an ISO date string into a developer-friendly date presentation format
- * such as "Oct 24, 2025" using the standard JavaScript Date formatting methods.
- *
- * PARAMETERS:
- * - isoString (string): The ISO timestamp of when the search log was created.
- *
- * RETURNS:
- * - string: A formatted representation of the date.
- */
-function formatDate(isoString: string): string {
-    return new Date(isoString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-    });
-}
-
 export function HistoryItem({
     item,
     isExpanded,
@@ -57,21 +40,18 @@ export function HistoryItem({
     onOpenModal,
     deletingId,
 }: HistoryItemProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
     const matchCount = item.search_matches?.length ?? 0;
 
-    /**
-     * BEHAVIORAL MECHANISM:
-     * Component function rendering a search history list row. The header row is a button
-     * that triggers the toggle callback. The details pane is wrapped in Framer Motion's AnimatePresence
-     * to transition height and opacity when expanded. Inside the details pane, matches are mapped
-     * to CourseMatchCard components.
-     *
-     * PARAMETERS:
-     * - None
-     *
-     * RETURNS:
-     * - React.ReactElement: The rendered history item list element.
-     */
+    function formatDate(isoString: string): string {
+        return new Date(isoString).toLocaleDateString(language.language === 'fi' ? "fi-FI" : "en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+        });
+    }
+
     return (
         <div data-testid="history-item" className="bg-white border border-[#4ad2ff] rounded-2xl overflow-hidden min-w-0">
             {/* Row header — clickable */}
@@ -83,15 +63,15 @@ export function HistoryItem({
                 <div className="min-w-0 flex-1 max-w-[780px]">
                     <p className="text-sm font-bold text-[#1a2e35] truncate">{item.company_name}</p>
                     <p className="text-xs font-medium text-[#1a5c55]">
-                        <span className="font-semibold text-[#1a2e35]">Position: </span>
+                        <span className="font-semibold text-[#1a2e35]">{language.language === 'fi' ? "Tehtävä: " : "Position: "}</span>
                         {item.position}
                     </p>
                     {item.programme && <p className="text-xs font-medium text-[#1a5c55]">
-                        <span className="font-semibold text-[#1a2e35]">Programme: </span>
+                        <span className="font-semibold text-[#1a2e35]">{language.language === 'fi' ? "Koulutusohjelma: " : "Programme: "}</span>
                         {item.programme}
                     </p>}
                     <p className="text-xs text-[#4a7a85]">
-                        <span className="font-semibold text-[#1a2e35]">Requirements: </span>
+                        <span className="font-semibold text-[#1a2e35]">{language.language === 'fi' ? "Vaatimukset: " : "Requirements: "}</span>
                         {isExpanded
                             ? item.technical_requirements
                             : (item.technical_requirements?.slice(0, 200) || "") + "...more"}
@@ -102,7 +82,7 @@ export function HistoryItem({
                 <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
                         <p className="text-[10px] font-semibold text-[#a8c8d4] uppercase tracking-wide">
-                            Created On
+                            {language.language === 'fi' ? "Luotu" : "Created On"}
                         </p>
                         <p className="text-xs font-semibold text-[#4a7a85]">
                             {formatDate(item.created_at!)}
@@ -132,14 +112,14 @@ export function HistoryItem({
                             {/* Matched courses label */}
                             <div className="flex items-center justify-between mb-4">
                                 <p className="text-xs font-bold text-[#6b9daa] uppercase tracking-wide">
-                                    Matched Courses ({matchCount})
+                                    {language.language === 'fi' ? `Sopivat kurssit (${matchCount})` : `Matched Courses (${matchCount})`}
                                 </p>
                             </div>
 
                             {/* Course grid */}
                             {matchCount === 0 ? (
                                 <p className="text-xs text-[#6b9daa] text-center py-4">
-                                    No matched courses for this search.
+                                    {language.language === 'fi' ? "Ei sopivia kursseja tälle haulle." : "No matched courses for this search."}
                                 </p>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5 min-w-0">
@@ -157,7 +137,7 @@ export function HistoryItem({
                                     className="cursor-pointer flex items-center gap-1.5 text-xs font-semibold text-[#c0392b] hover:bg-[#fde8e8] px-3 py-2 rounded-lg transition-colors disabled:opacity-50 shrink-0 duration-300"
                                 >
                                     <Delete sx={{ fontSize: 16 }} />
-                                    {deletingId === item.id ? "Deleting..." : "Delete History"}
+                                    {deletingId === item.id ? t.history.deleting : t.history.deleteHistory}
                                 </button>
                             </div>
                         </div>

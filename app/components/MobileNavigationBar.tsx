@@ -9,6 +9,9 @@ import type { User } from "@supabase/supabase-js";
 import { useNotification } from "../context/Notification";
 import { signout } from "../actions/authentication";
 import Image from 'next/image'
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../translations";
+import { LanguageSwitchButton } from "./LanguageSwitchButton";
 import { NAV_ITEMS } from "./NavigationBarClient";
 
 // =====================================================================
@@ -34,6 +37,8 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const { showNotification } = useNotification();
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
 
     const handleLogout = async () => {
         try {
@@ -51,67 +56,70 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
     return (
         <>
             {/* ── Top bar — fixed, visible on mobile only ── */}
-            <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-3 bg-[#e8f4f8] border-b border-[#c8e6ee] md:hidden">
+            <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2.5 bg-[#e8f4f8] border-b border-[#c8e6ee] md:hidden">
                 {/* Brand */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                     <Image
                         src="/logo.png"
                         alt="Course Matcher Pro logo"
-                        width={30}
-                        height={30}
+                        width={26}
+                        height={26}
                         className="object-contain"
                     />
-                    <span className="text-xs font-bold text-[#1a2e35] uppercase tracking-[0.05em]">
+                    <span className="text-[11px] font-bold text-[#1a2e35] uppercase tracking-[0.03em]">
                         Course Matcher Pro
                     </span>
                 </div>
 
-                {/* Hamburger button */}
-                <button
-                    onClick={() => setIsOpen((prev) => !prev)}
-                    aria-label="Toggle menu"
-                    className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#d4eef5] transition-colors"
-                >
-                    <AnimatePresence mode="wait" initial={false}>
-                        {isOpen ? (
-                            <motion.span
-                                key="close"
-                                initial={{ opacity: 0, rotate: -90 }}
-                                animate={{ opacity: 1, rotate: 0 }}
-                                exit={{ opacity: 0, rotate: 90 }}
-                                transition={{ duration: 0.18 }}
-                            >
-                                <X size={20} className="text-[#1a5c55]" />
-                            </motion.span>
-                        ) : (
-                            <motion.span
-                                key="open"
-                                initial={{ opacity: 0, rotate: 90 }}
-                                animate={{ opacity: 1, rotate: 0 }}
-                                exit={{ opacity: 0, rotate: -90 }}
-                                transition={{ duration: 0.18 }}
-                            >
-                                {/* Hamburger SVG matching the provided design */}
-                                <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
-                                    <path
-                                        className="text-[#1a5c55]"
-                                        stroke="currentColor"
-                                        strokeWidth="2.5"
-                                        strokeLinecap="round"
-                                        d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"
-                                    />
-                                    <path
-                                        stroke="currentColor"
-                                        strokeWidth="2.5"
-                                        strokeLinecap="round"
-                                        className="text-[#1a5c55]"
-                                        d="M7 16 27 16"
-                                    />
-                                </svg>
-                            </motion.span>
-                        )}
-                    </AnimatePresence>
-                </button>
+                {/* Right Area: Language Switcher & Hamburger */}
+                <div className="flex items-center gap-2">
+                    <LanguageSwitchButton compact />
+
+                    <button
+                        onClick={() => setIsOpen((prev) => !prev)}
+                        aria-label="Toggle menu"
+                        className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#d4eef5] transition-colors"
+                    >
+                        <AnimatePresence mode="wait" initial={false}>
+                            {isOpen ? (
+                                <motion.span
+                                    key="close"
+                                    initial={{ opacity: 0, rotate: -90 }}
+                                    animate={{ opacity: 1, rotate: 0 }}
+                                    exit={{ opacity: 0, rotate: 90 }}
+                                    transition={{ duration: 0.18 }}
+                                >
+                                    <X size={20} className="text-[#1a5c55]" />
+                                </motion.span>
+                            ) : (
+                                <motion.span
+                                    key="open"
+                                    initial={{ opacity: 0, rotate: 90 }}
+                                    animate={{ opacity: 1, rotate: 0 }}
+                                    exit={{ opacity: 0, rotate: -90 }}
+                                    transition={{ duration: 0.18 }}
+                                >
+                                    <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+                                        <path
+                                            className="text-[#1a5c55]"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"
+                                        />
+                                        <path
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            strokeLinecap="round"
+                                            className="text-[#1a5c55]"
+                                            d="M7 16 27 16"
+                                        />
+                                    </svg>
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+                    </button>
+                </div>
             </header>
 
             {/* ── Backdrop ── */}
@@ -138,7 +146,7 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
                         animate={{ x: 0 }}
                         exit={{ x: "-100%" }}
                         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                        className="fixed top-0 left-0 z-50 h-full w-[220px] bg-[#e8f4f8] flex flex-col py-6 px-3 shadow-2xl md:hidden"
+                        className="fixed top-0 left-0 z-50 h-full w-[230px] bg-[#e8f4f8] flex flex-col py-6 px-3 shadow-2xl md:hidden"
                     >
                         {/* Brand */}
                         <div className="flex items-center gap-2.5 px-2 mb-2">
@@ -154,18 +162,25 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
                             </span>
                         </div>
 
-                        {/* Plan badge */}
-                        <div className="flex items-center gap-1.5 px-2 mb-6">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#7dd8cc]" />
-                            <span className="text-[10px] font-medium text-[#7aa5b0] uppercase tracking-wider">
-                                Professional Plan
-                            </span>
+                        {/* Plan badge & Language switch */}
+                        <div className="flex flex-col gap-2 px-2 mb-6">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#7dd8cc]" />
+                                <span className="text-[10px] font-medium text-[#7aa5b0] uppercase tracking-wider">
+                                    {t.nav.professionalPlan}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between pt-1 border-t border-[#c8e6ee]">
+                                <span className="text-[11px] font-semibold text-[#6b9daa]">{t.nav.language}</span>
+                                <LanguageSwitchButton />
+                            </div>
                         </div>
 
                         {/* Nav items */}
                         <nav className="flex flex-col gap-1 flex-1">
                             {NAV_ITEMS.map((item) => {
                                 const isActive = pathname === item.href;
+                                const label = t.nav[item.id] || item.id;
                                 return (
                                     <Link
                                         key={item.href}
@@ -180,7 +195,7 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
                                         <span className={isActive ? "text-[#1a5c55]" : "text-[#7aa5b0]"}>
                                             {item.icon}
                                         </span>
-                                        {item.label}
+                                        {label}
                                     </Link>
                                 );
                             })}
@@ -188,20 +203,12 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
 
                         {/* Bottom actions */}
                         <div className="flex flex-col gap-1 pt-4 border-t border-[#c8e6ee]">
-                            {/* <Link
-                                href="/help"
-                                onClick={close}
-                                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#d4eef5] hover:text-[#1a5c55] transition-colors"
-                            >
-                                <HelpCircle size={18} strokeWidth={1.8} className="text-[#7aa5b0]" />
-                                Help
-                            </Link> */}
                             <button
                                 onClick={handleLogout}
                                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-[#4a7a85] hover:bg-[#fde8e8] hover:text-[#c0392b] transition-colors w-full text-left"
                             >
                                 <LogOut size={18} strokeWidth={1.8} className="text-[#7aa5b0]" />
-                                Sign Out
+                                {t.nav.signOut}
                             </button>
                         </div>
                     </motion.aside>
@@ -212,5 +219,6 @@ const MobileNavigationBar = ({ user }: MobileNavigationBarProps) => {
             <div className="h-14 md:hidden" />
         </>
     );
-}
-export default MobileNavigationBar
+};
+
+export default MobileNavigationBar;

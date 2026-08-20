@@ -3,8 +3,13 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import { useLanguage } from '../context/LanguageContext';
+import { translations } from '../translations';
 
 export default function TermsAndConditions() {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     return (
         <div className="min-h-screen bg-[#f0f7fa] flex flex-col font-sans">
             <motion.div
@@ -19,12 +24,12 @@ export default function TermsAndConditions() {
                     className="inline-flex font-roboto-mono pb-5 gap-3 text-sm items-center hover:pl-2 duration-300 cursor-pointer text-[#1a5c55] font-semibold"
                 >
                     <ArrowBackIosNewIcon sx={{ fontSize: '12px' }} />
-                    <span>Back to home</span>
+                    <span>{t.termsConditions.backHome}</span>
                 </Link>
 
                 {/* Page Title */}
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a5c55] leading-tight tracking-[-0.02em] mb-6">
-                    Terms and Conditions
+                    {t.termsConditions.title}
                 </h1>
 
                 <div className="bg-white rounded-2xl border border-[#d6edf5] p-6 sm:p-10 shadow-sm flex flex-col gap-6 text-[#1a2e35]">

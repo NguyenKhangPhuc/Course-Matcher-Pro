@@ -21,6 +21,8 @@ import React from "react";
 import { UseFormRegister, UseFormHandleSubmit, FieldErrors } from "react-hook-form";
 import { Shield } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 export interface JobForm {
     company_name: string;
@@ -49,6 +51,9 @@ export function TargetJobForm({
     selectedPeriod,
     onAnalyze,
 }: TargetJobFormProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     /**
      * BEHAVIORAL MECHANISM:
      * Component function that renders the form structure. It binds the React Hook Form register
@@ -75,7 +80,7 @@ export function TargetJobForm({
                 transition={{ delay: 0.1 }}
             >
                 <Shield fontSize="small" className="dashboard-section-icon" />
-                Target Job
+                {t.dashboard.targetJobTitle}
             </motion.h2>
 
             <motion.form
@@ -100,15 +105,15 @@ export function TargetJobForm({
                         show: { opacity: 1, y: 0 },
                     }}
                 >
-                    <label htmlFor="company-name-input" className="dashboard-label">Company Name</label>
+                    <label htmlFor="company-name-input" className="dashboard-label">{t.dashboard.companyNameLabel}</label>
 
                     <motion.input
                         id="company-name-input"
                         {...register("company_name", {
-                            required: "Company name is required",
+                            required: t.dashboard.companyRequired,
                         })}
                         className="dashboard-input"
-                        placeholder="e.g. Google, TechCorp Inc."
+                        placeholder={t.dashboard.companyPlaceholder}
                         whileFocus={{
                             scale: 1.01,
                         }}
@@ -134,15 +139,15 @@ export function TargetJobForm({
                         show: { opacity: 1, y: 0 },
                     }}
                 >
-                    <label htmlFor="position-input" className="dashboard-label">Position</label>
+                    <label htmlFor="position-input" className="dashboard-label">{t.dashboard.positionLabel}</label>
 
                     <motion.input
                         id="position-input"
                         {...register("position", {
-                            required: "Position is required",
+                            required: t.dashboard.positionRequired,
                         })}
                         className="dashboard-input"
-                        placeholder="e.g. AI developer"
+                        placeholder={t.dashboard.positionPlaceholder}
                         whileFocus={{
                             scale: 1.01,
                         }}
@@ -169,13 +174,13 @@ export function TargetJobForm({
                     }}
                 >
                     <label htmlFor="job-desc-textarea" className="dashboard-label">
-                        Job Description
+                        {t.dashboard.jobDescLabel}
                     </label>
 
                     <motion.textarea
                         id="job-desc-textarea"
                         {...register("job_description", {
-                            required: "Job description is required",
+                            required: t.dashboard.jobDescRequired,
                             minLength: {
                                 value: 30,
                                 message:
@@ -183,7 +188,7 @@ export function TargetJobForm({
                             },
                         })}
                         className="dashboard-textarea"
-                        placeholder="Paste the job requirements, responsibilities, and qualifications here..."
+                        placeholder={t.dashboard.jobDescPlaceholder}
                         rows={8}
                         whileFocus={{
                             scale: 1.01,
@@ -236,10 +241,10 @@ export function TargetJobForm({
                     }
                 >
                     {isAnalyzing ? (
-                        "Analyzing..."
+                        t.dashboard.analyzing
                     ) : (
                         <>
-                            Start Analyze Description
+                            {t.dashboard.startAnalyze}
                             <motion.span
                                 className="dashboard-analyze-arrow"
                                 animate={{

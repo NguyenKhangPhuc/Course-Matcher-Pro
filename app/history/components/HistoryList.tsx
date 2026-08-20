@@ -19,6 +19,8 @@
 import React from "react";
 import { SearchHistoryWithMatches } from "../../types/search_history";
 import { HistoryItem } from "./HistoryItem";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 interface HistoryListProps {
     items: SearchHistoryWithMatches[];
@@ -35,23 +37,14 @@ export function HistoryList({
     onOpenModal,
     deletingId,
 }: HistoryListProps) {
-    /**
-     * BEHAVIORAL MECHANISM:
-     * Component function rendering the lists layer. Conditionally checks if items is empty.
-     * If empty, returns the styled empty-state container. If not, maps over items array
-     * to render a list of HistoryItem components.
-     *
-     * PARAMETERS:
-     * - None
-     *
-     * RETURNS:
-     * - React.ReactElement: The rendered history list container or empty state.
-     */
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     if (items.length === 0) {
         return (
             <div className="bg-white border border-[#d6edf5] rounded-2xl p-10 text-center">
                 <p className="text-sm text-[#6b9daa]">
-                    No search history yet. Run an analysis from the Dashboard to see it here.
+                    {t.history.noHistorySub}
                 </p>
             </div>
         );

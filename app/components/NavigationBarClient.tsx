@@ -9,6 +9,10 @@ import { useNotification } from "../context/Notification";
 import Image from 'next/image'
 
 
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../translations";
+import { LanguageSwitchButton } from "./LanguageSwitchButton";
+
 // =====================================================================
 // TYPES
 // =====================================================================
@@ -17,38 +21,34 @@ interface NavigationBarClientProps {
   user?: User | null;
 }
 
-// =====================================================================
-// NAV ITEMS
-// =====================================================================
+interface NavItem {
+  id: "home" | "dashboard" | "history" | "sourceManagement";
+  href: string;
+  icon: React.ReactNode;
+}
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: "Home",
+    id: "home",
     href: "/",
     icon: <LayoutDashboard size={18} strokeWidth={1.8} />,
   },
   {
-    label: "Dashboard",
+    id: "dashboard",
     href: "/dashboard",
     icon: <LayoutDashboard size={18} strokeWidth={1.8} />,
   },
   {
-    label: "History",
+    id: "history",
     href: "/history",
     icon: <History size={18} strokeWidth={1.8} />,
   },
   {
-    label: "Source Management",
+    id: "sourceManagement",
     href: "/source-management",
     icon: <Database size={18} strokeWidth={1.8} />,
   },
 ];
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-}
 
 // =====================================================================
 // COMPONENT
@@ -66,18 +66,19 @@ interface NavItem {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function NavigationBarClient({ user }: NavigationBarClientProps) {
   const pathname = usePathname();
-  const { showNotification } = useNotification()
+  const { showNotification } = useNotification();
+  const { language } = useLanguage();
+  const t = translations[language.language] || translations.en;
+
   const handleLogout = async () => {
     try {
-      await signout()
+      await signout();
     } catch (error) {
-
       if (error instanceof Error && error.message !== 'NEXT_REDIRECT') {
-
-        showNotification(error.message)
+        showNotification(error.message);
       }
     }
-  }
+  };
 
   return (
     <aside className="nav-sidebar">
@@ -95,16 +96,24 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
         </span>
       </div>
 
-      {/* ── Plan badge ────────────────────────────────── */}
-      <div className="nav-plan-badge">
-        <span className="nav-plan-dot" />
-        Professional Plan
+      {/* ── Plan badge & Language Switch ──────────────────── */}
+      <div className="flex flex-col gap-2 px-1">
+        <div className="nav-plan-badge">
+          <span className="nav-plan-dot" />
+          {t.nav.professionalPlan}
+        </div>
+
+        <div className="flex items-center justify-between px-1 py-1">
+          <span className="text-[11px] font-semibold text-[#6b9daa]">{t.nav.language}</span>
+          <LanguageSwitchButton />
+        </div>
       </div>
 
       {/* ── Navigation items ──────────────────────────── */}
       <nav className="nav-menu">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
+          const label = t.nav[item.id] || item.id;
           return (
             <Link
               key={item.href}
@@ -112,7 +121,7 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
               className={`nav-item ${isActive ? "nav-item-active" : "nav-item-inactive"}`}
             >
               <span className="nav-item-icon">{item.icon}</span>
-              <span>{item.label}</span>
+              <span>{label}</span>
             </Link>
           );
         })}
@@ -120,14 +129,9 @@ export function NavigationBarClient({ user }: NavigationBarClientProps) {
 
       {/* ── Bottom actions ────────────────────────────── */}
       <div className="nav-bottom">
-        {/* <Link href="/help" className="nav-bottom-btn">
-          <HelpCircle size={18} strokeWidth={1.8} />
-          <span>Help</span>
-        </Link> */}
-
         <button onClick={handleLogout} className="nav-bottom-btn nav-signout">
           <LogOut size={18} strokeWidth={1.8} />
-          <span>Sign Out</span>
+          <span>{t.nav.signOut}</span>
         </button>
       </div>
     </aside>

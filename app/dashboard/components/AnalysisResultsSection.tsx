@@ -21,6 +21,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, OpenInNew } from "@mui/icons-material";
 import { AgentResponseClient } from "../../types/agent";
 import { ComponentLoader } from "../../components/ComponentLoader";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 interface AnalysisResultsSectionProps {
     agentResult: AgentResponseClient | null;
@@ -33,28 +35,16 @@ export function AnalysisResultsSection({
     isAnalyzing,
     coursesSectionRef,
 }: AnalysisResultsSectionProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     function formatDateRange(start?: string | null, end?: string | null): string {
         if (!start && !end) return "TBA";
         const fmt = (d: string) =>
-            new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+            new Date(d).toLocaleDateString(language.language === 'fi' ? "fi-FI" : "en-GB", { day: "2-digit", month: "short" });
         if (start && end) return `${fmt(start)} – ${fmt(end)}`;
         return fmt(start || end!);
     }
-
-    /**
-     * BEHAVIORAL MECHANISM:
-     * Section mounts as soon as isAnalyzing turns true (even while agentResult is
-     * still null), immediately scrolling into view and showing skeleton loaders for
-     * both the requirements block and the courses grid. Results stream in progressively
-     * as the agent responds. The section stays visible after analysis completes so the
-     * user can browse the full result set.
-     *
-     * PARAMETERS:
-     * - None
-     *
-     * RETURNS:
-     * - React.ReactElement: The rendered analysis results section or null.
-     */
 
     /* Show the section the moment analysis starts OR when we already have a result */
     const shouldShow = isAnalyzing || agentResult !== null;
@@ -77,14 +67,14 @@ export function AnalysisResultsSection({
                                 fontSize="small"
                                 className="dashboard-section-icon dashboard-section-icon-green"
                             />
-                            Analysis Results
+                            {t.dashboard.resultsTitle}
                         </h2>
-                        <span className="dashboard-relevance-badge">Top Relevance</span>
+                        <span className="dashboard-relevance-badge">{language.language === 'fi' ? "Parhaat suositukset" : "Top Relevance"}</span>
                     </div>
 
                     {/* Section 1: Technical Requirements */}
                     <div className="dashboard-requirements">
-                        <p className="dashboard-requirements-label">Technical Requirements Identified</p>
+                        <p className="dashboard-requirements-label">{t.dashboard.identifiedReqs}</p>
 
                         <AnimatePresence mode="wait">
                             {agentResult?.technical_requirements ? (
@@ -105,7 +95,7 @@ export function AnalysisResultsSection({
                                 >
                                     <ComponentLoader
                                         sizeClassName="w-10 h-10"
-                                        label="Extracting technical requirements..."
+                                        label={language.language === 'fi' ? "Poimitaan teknisiä vaatimuksia..." : "Extracting technical requirements..."}
                                     />
                                 </motion.div>
                             ) : (
@@ -115,7 +105,7 @@ export function AnalysisResultsSection({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                 >
-                                    No specific technical requirements identified.
+                                    {t.dashboard.noReqsFound}
                                 </motion.p>
                             )}
                         </AnimatePresence>
@@ -125,7 +115,7 @@ export function AnalysisResultsSection({
 
                     {/* Section 2: Recommended Courses */}
                     <div className="dashboard-courses-section">
-                        <p className="dashboard-requirements-label">Recommended Academic Courses</p>
+                        <p className="dashboard-requirements-label">{t.dashboard.matchedCourses}</p>
 
                         <AnimatePresence mode="wait">
                             {isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
@@ -137,7 +127,7 @@ export function AnalysisResultsSection({
                                 >
                                     <ComponentLoader
                                         sizeClassName="w-16 h-16"
-                                        label="Querying vector database & compiling matches..."
+                                        label={language.language === 'fi' ? "Haetaan sopivia kursseja tietokannasta..." : "Querying vector database & compiling matches..."}
                                     />
                                 </motion.div>
                             ) : !isAnalyzing && (!agentResult?.courses || agentResult.courses.length === 0) ? (
@@ -147,7 +137,7 @@ export function AnalysisResultsSection({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                 >
-                                    No matching courses found.
+                                    {language.language === 'fi' ? "Sopivia kursseja ei löytynyt." : "No matching courses found."}
                                 </motion.p>
                             ) : (
                                 <motion.div
@@ -166,7 +156,7 @@ export function AnalysisResultsSection({
                                         >
                                             <div className="flex items-start justify-between gap-2 min-w-0">
                                                 <span className="text-[10px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
-                                                    Match Score
+                                                    {language.language === 'fi' ? "Sopivuus" : "Match Score"}
                                                 </span>
                                                 <span className="text-xl font-extrabold text-[#1a5c55] leading-none shrink-0">
                                                     {Math.round(course.similarity)}%
@@ -183,7 +173,7 @@ export function AnalysisResultsSection({
                                             <div className="grid grid-cols-2 gap-2 min-w-0">
                                                 <div className="flex flex-col gap-0.5 min-w-0 bg-[#e8f4f8] rounded-xl px-2.5 py-1.5">
                                                     <span className="text-[9px] font-semibold text-[#6b9daa] uppercase tracking-wide">
-                                                        Enrollment
+                                                        {language.language === 'fi' ? "Ilmoittautuminen" : "Enrollment"}
                                                     </span>
                                                     <span className="text-[11px] font-semibold text-[#1a5c55] truncate">
                                                         {formatDateRange(course.enrollment_start_date, course.enrollment_end_date)}
@@ -191,7 +181,7 @@ export function AnalysisResultsSection({
                                                 </div>
                                                 <div className="flex flex-col gap-0.5 min-w-0 bg-[#e8f4f8] rounded-xl px-2.5 py-1.5">
                                                     <span className="text-[9px] font-semibold text-[#6b9daa] uppercase tracking-wide">
-                                                        Course Period
+                                                        {language.language === 'fi' ? "Kurssin ajankohta" : "Course Period"}
                                                     </span>
                                                     <span className="text-[11px] font-semibold text-[#1a5c55] truncate">
                                                         {formatDateRange(course.start_date, course.end_date)}

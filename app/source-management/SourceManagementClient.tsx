@@ -22,6 +22,8 @@ import { getCoursesBySourceId } from "../actions/course";
 import { useNotification } from "../context/Notification";
 import StorageIcon from "@mui/icons-material/Storage";
 import { deleteSource, updateSourceNameBySourceId } from "../actions/source_management";
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../translations";
 
 // Component Imports
 import { StatCard, StorageCard } from "./components/StatCards";
@@ -34,36 +36,11 @@ interface Props {
     userId: string;
 }
 
-/**
- * Behavioral Mechanism:
- * Formats database date strings into a readable text format.
- *
- * Parameters:
- * - d: ISO date string.
- *
- * Return Value:
- * - string: Formatted date representation.
- */
-function formatDate(d: string | null | undefined): string {
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-/**
- * Behavioral Mechanism:
- * Coordinates the global state of source lists, active sub-row courses, loading flags,
- * and current modal targets. Passes states and action callbacks as properties down to
- * specialized presentational sub-components.
- *
- * Parameters:
- * - props: Contains the initial server-fetched sources.
- *
- * Return Value:
- * - React.ReactElement: Main Source Management dashboard view.
- */
 export default function SourceManagementClient({ sources }: Props) {
     const { showNotification } = useNotification();
     const { register, handleSubmit, formState: { errors }, reset } = useForm<CourseInsert>();
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
 
     // ── State ─────────────────────────────────────────────────────────
     const [sourceList, setSourceList] = useState<SourceInsert[]>(sources);
@@ -78,76 +55,50 @@ export default function SourceManagementClient({ sources }: Props) {
     // Course edit modal
     const [editingCourse, setEditingCourse] = useState<CourseInsert | null>(null);
 
-    // Source actions dropdown
+    // Dropdown menu state
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     // ── Computed stats ────────────────────────────────────────────────
     const totalSources = sourceList.length;
     const totalCourses = activeCourses.length;
-    const lastUpdated = sourceList[0]?.updated_at ? formatDate(sourceList[0].updated_at) : "—";
+    const lastUpdated = formatDate(sourceList[0]?.created_at);
+
+    function formatDate(d: string | null | undefined): string {
+        if (!d) return "—";
+        return new Date(d).toLocaleDateString(language.language === 'fi' ? "fi-FI" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    }
 
     // ── Handlers ──────────────────────────────────────────────────────
 
-    /**
-     * Behavioral Mechanism:
-     * Expands or collapses a source row. If expanded, triggers a lazy fetch for nested courses.
-     *
-     * Parameters:
-     * - sourceId: The unique ID of the source.
-     *
-     * Return Value:
-     * - Promise<void>
-     */
     const handleToggleExpand = async (sourceId: string) => {
-        setOpenMenuId(null);
-
         if (expandedSourceId === sourceId) {
             setExpandedSourceId(null);
-            setActiveCourses([]);
             return;
         }
-
         setExpandedSourceId(sourceId);
-        setActiveCourses([]);
         setLoadingSourceId(sourceId);
-
         try {
             const result = await getCoursesBySourceId(sourceId);
-            if (result.error) throw new Error(result.error);
-            setActiveCourses(result.data ?? []);
-        } catch (err) {
-            showNotification(err instanceof Error ? err.message : "Failed to load courses.");
+            if (result.error) {
+                showNotification(result.error);
+                setActiveCourses([]);
+            } else {
+                setActiveCourses(result.data || []);
+            }
+        } catch {
+            showNotification("Failed to fetch courses.");
+            setActiveCourses([]);
         } finally {
             setLoadingSourceId(null);
         }
     };
 
-    /**
-     * Behavioral Mechanism:
-     * Prepares inline inputs with the current name of the selected source.
-     *
-     * Parameters:
-     * - source: The source object selected.
-     *
-     * Return Value:
-     * - void
-     */
     const handleStartEditName = (source: SourceInsert) => {
         setEditingSourceId(source.id!);
         setEditingName(source.name);
         setOpenMenuId(null);
     };
 
-    /**
-     * Behavioral Mechanism:
-     * Persists inline name edits to the database via server action updateSourceNameBySourceId.
-     *
-     * Parameters:
-     * - sourceId: The ID of the source record being renamed.
-     *
-     * Return Value:
-     * - Promise<void>
-     */
     const handleSaveName = async (sourceId: string) => {
         const { error } = await updateSourceNameBySourceId(sourceId, editingName);
 
@@ -162,31 +113,11 @@ export default function SourceManagementClient({ sources }: Props) {
         showNotification("Source renamed successfully.");
     };
 
-    /**
-     * Behavioral Mechanism:
-     * Discards current name modifications and exits inline input mode.
-     *
-     * Parameters:
-     * - None
-     *
-     * Return Value:
-     * - void
-     */
     const handleCancelEditName = () => {
         setEditingSourceId(null);
         setEditingName("");
     };
 
-    /**
-     * Behavioral Mechanism:
-     * Performs a hard delete on a database source record via deleteSource action.
-     *
-     * Parameters:
-     * - sourceId: The ID of the source.
-     *
-     * Return Value:
-     * - Promise<void>
-     */
     const handleDeleteSource = async (sourceId: string) => {
         setOpenMenuId(null);
         try {
@@ -202,31 +133,12 @@ export default function SourceManagementClient({ sources }: Props) {
         }
     };
 
-    /**
-     * Behavioral Mechanism:
-     * Updates local state with modified course fields returned by the modal.
-     *
-     * Parameters:
-     * - updated: The updated course insert structure.
-     *
-     * Return Value:
-     * - void
-     */
     const handleCourseSaved = (updated: CourseInsert) => {
         setActiveCourses((prev) =>
             prev.map((c) => (c.id === updated.id ? updated : c))
         );
     };
-    /**
-     * Behavioral Mechanism:
-     * Formats a raw date string to YYYY-MM-DD representation.
-     *
-     * Parameters:
-     * - dateStr: Raw date value from database.
-     *
-     * Return Value:
-     * - string: Formatted date string or empty string.
-     */
+
     function formatDateForInput(dateStr: string | null): string {
         if (!dateStr || typeof dateStr !== "string") return "";
         return dateStr.split("T")[0];
@@ -234,7 +146,6 @@ export default function SourceManagementClient({ sources }: Props) {
 
     const handleSelectCourse = (course: CourseInsert) => {
         setEditingCourse(course)
-        // console.log(course)
         reset({
             ...course,
             start_date: formatDateForInput(course.start_date ?? null),
@@ -258,9 +169,11 @@ export default function SourceManagementClient({ sources }: Props) {
                     <StorageIcon sx={{ fontSize: 20 }} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                    <h1 data-testid="source-management-heading" className="text-lg font-bold text-[#1a2e35] leading-tight">Source Management</h1>
+                    <h1 data-testid="source-management-heading" className="text-lg font-bold text-[#1a2e35] leading-tight">
+                        {t.sourceManagement.pageTitle}
+                    </h1>
                     <p className="text-xs text-[#6b9daa]">
-                        Manage academic data streams and nested course definitions.
+                        {t.sourceManagement.pageSub}
                     </p>
                 </div>
             </motion.div>
@@ -272,9 +185,9 @@ export default function SourceManagementClient({ sources }: Props) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.05 }}
             >
-                <StatCard label="Total Sources" value={String(totalSources)} />
-                <StatCard label="Processed Records" value={totalCourses.toLocaleString()} accent />
-                <StatCard label="Last Updated" value={lastUpdated} small />
+                <StatCard label={t.sourceManagement.totalSources} value={String(totalSources)} />
+                <StatCard label={language.language === 'fi' ? "Käsitellyt tietueet" : "Processed Records"} value={totalCourses.toLocaleString()} accent />
+                <StatCard label={language.language === 'fi' ? "Viimeksi päivitetty" : "Last Updated"} value={lastUpdated} small />
                 <StorageCard count={totalCourses} />
             </motion.div>
 
@@ -288,13 +201,13 @@ export default function SourceManagementClient({ sources }: Props) {
             >
                 {/* Table header bar */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[#e8f4f8]">
-                    <h2 className="text-sm font-bold text-[#1a2e35]">Data Sources</h2>
-                    <span className="text-xs font-medium text-[#7aa5b0]">Sources Table</span>
+                    <h2 className="text-sm font-bold text-[#1a2e35]">{t.sourceManagement.sourcesTableTitle}</h2>
+                    <span className="text-xs font-medium text-[#7aa5b0]">{t.sourceManagement.pageTitle}</span>
                 </div>
 
                 {/* Column headings */}
                 <div className="hidden sm:grid grid-cols-[2fr_120px_140px_160px_80px] gap-4 px-6 py-2.5 bg-[#f0f7fa] border-b border-[#e8f4f8]">
-                    {["Name", "File Type", "Default Status", "Created At", "Actions"].map((h) => (
+                    {[t.sourceManagement.colName, t.sourceManagement.colType, t.sourceManagement.colStatus, t.sourceManagement.colCreated, t.sourceManagement.colActions].map((h) => (
                         <span key={h} className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide">
                             {h}
                         </span>

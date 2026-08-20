@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavigationBarServer } from "./components/NavigationBarServer";
 import { LoaderProvider } from "./context/LoaderContext";
 import { NotificationProvider } from "./context/Notification";
+import { LanguageProvider } from "./context/LanguageContext";
 import Loader from "./components/Loader";
 import { Notification } from "./components/Notification";
 import { Footer } from "./components/Footer";
@@ -36,23 +37,25 @@ export default function RootLayout({
   return (
     <LoaderProvider>
       <NotificationProvider>
-        <html
-          lang="en"
-          className={`${geistSans.variable} ${geistMono.variable} h-full antialiased `}
-        >
-          <body className="flex min-h-screen flex-row">
-            <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
-            <Loader />
-            <Notification />
-            <main className="flex-1 md:mt-0 mt-15 flex flex-col min-h-screen">
-              <div className="flex-1">
-                {children}
-              </div>
-              <Footer />
-            </main>
-          </body>
+        <LanguageProvider>
+          <html
+            lang="en"
+            className={`${geistSans.variable} ${geistMono.variable} h-full antialiased `}
+          >
+            <body className="flex min-h-screen flex-row">
+              <NavigationBarServer />       {/* width: 220px — tự chiếm chỗ */}
+              <Loader />
+              <Notification />
+              <main className="flex-1 md:mt-0 mt-15 flex flex-col min-h-screen">
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
+              </main>
+            </body>
 
-        </html>
+          </html>
+        </LanguageProvider>
       </NotificationProvider>
     </LoaderProvider>
   );

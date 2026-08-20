@@ -35,6 +35,8 @@ import {
 } from "@mui/icons-material";
 import { SourceInsert } from "../../types/source";
 import { CourseInsert } from "../../types/course";
+import { useLanguage } from "../../context/LanguageContext";
+import { translations } from "../../translations";
 
 interface SourceRowProps {
     source: SourceInsert;
@@ -120,16 +122,18 @@ export function SourceRow({
     onDeleteSource,
     onSelectCourse,
 }: SourceRowProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [courseSearchQuery, setCourseSearchQuery] = useState("");
 
     const filteredCourses = activeCourses.filter((c) => {
         if (!courseSearchQuery.trim()) return true;
         const query = courseSearchQuery.toLowerCase().trim();
-        const name = (c.name || "").toLowerCase();
-        const title = (c.title || "").toLowerCase();
-        const code = (c.code || "").toLowerCase();
-        return name.includes(query) || title.includes(query) || code.includes(query);
+        const nameMatch = (c.name || "").toLowerCase().includes(query);
+        const titleMatch = (c.title || "").toLowerCase().includes(query);
+        const codeMatch = (c.code || "").toLowerCase().includes(query);
+        return nameMatch || titleMatch || codeMatch;
     });
 
     return (
@@ -267,7 +271,7 @@ export function SourceRow({
                             {/* Sub-header */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3 border-b border-[#e8f4f8]">
                                 <h3 className="text-sm font-bold text-[#1a5c55] shrink-0">
-                                    Nested Courses
+                                    {language.language === 'fi' ? "Sisältyvät kurssit" : "Nested Courses"}
                                     {!isLoading && (
                                         <span className="ml-2 text-[11px] font-medium text-[#7aa5b0]">
                                             ({filteredCourses.length}{courseSearchQuery ? ` / ${activeCourses.length}` : ""})
@@ -282,7 +286,7 @@ export function SourceRow({
                                             type="text"
                                             value={courseSearchQuery}
                                             onChange={(e) => setCourseSearchQuery(e.target.value)}
-                                            placeholder="Search by course name..."
+                                            placeholder={t.sourceManagement.searchPlaceholder}
                                             className="
                                                 w-full sm:w-56
                                                 pl-8 pr-7 py-1
@@ -317,15 +321,15 @@ export function SourceRow({
                                         animate={{ rotate: 360 }}
                                         transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
                                     />
-                                    <span className="text-sm text-[#7aa5b0]">Loading courses…</span>
+                                    <span className="text-sm text-[#7aa5b0]">{language.language === 'fi' ? "Ladataan kursseja..." : "Loading courses…"}</span>
                                 </div>
                             ) : activeCourses.length === 0 ? (
                                 <p className="text-sm text-[#7aa5b0] text-center py-8">
-                                    No courses in this source.
+                                    {language.language === 'fi' ? "Ei kursseja tässä lähteessä." : "No courses in this source."}
                                 </p>
                             ) : filteredCourses.length === 0 ? (
                                 <p className="text-sm text-[#7aa5b0] text-center py-8">
-                                    No courses matching &quot;{courseSearchQuery}&quot;
+                                    {t.sourceManagement.noCoursesFound}
                                 </p>
                             ) : (
                                 <>

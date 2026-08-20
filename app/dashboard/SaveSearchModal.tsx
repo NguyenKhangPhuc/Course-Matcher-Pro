@@ -27,7 +27,13 @@ interface SaveSearchModalProps {
  * Covers the entire viewport with a blurred backdrop, preventing any
  * interaction with the page behind it until the user picks an option.
  */
+import { useLanguage } from "../context/LanguageContext";
+import { translations } from "../translations";
+
 export function DynamicModal({ isOpen, onSave, onDismiss, title, subTitle }: SaveSearchModalProps) {
+    const { language } = useLanguage();
+    const t = translations[language.language] || translations.en;
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -60,13 +66,13 @@ export function DynamicModal({ isOpen, onSave, onDismiss, title, subTitle }: Sav
                                 onClick={onDismiss}
                                 className="cursor-pointer flex-1 rounded-xl border border-[#d6edf5] bg-white py-2.5 text-sm font-semibold text-[#4a7a85] transition-colors hover:bg-[#f0f7fa]"
                             >
-                                No
+                                {t.dashboard.saveNo}
                             </button>
                             <button
                                 onClick={onSave}
                                 className="cursor-pointer flex-1 rounded-xl bg-[#1a5c55] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-70 duration-300"
                             >
-                                Yes
+                                {t.dashboard.saveYes}
                             </button>
                         </div>
                     </motion.div>
