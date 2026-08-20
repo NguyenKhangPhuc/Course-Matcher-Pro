@@ -27,11 +27,11 @@
 
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     MoreVert, Edit, Check, Close,
-    KeyboardArrowDown, DeleteForever,
+    KeyboardArrowDown, DeleteForever, Search,
 } from "@mui/icons-material";
 import { SourceInsert } from "../../types/source";
 import { CourseInsert } from "../../types/course";
@@ -121,6 +121,16 @@ export function SourceRow({
     onSelectCourse,
 }: SourceRowProps) {
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [courseSearchQuery, setCourseSearchQuery] = useState("");
+
+    const filteredCourses = activeCourses.filter((c) => {
+        if (!courseSearchQuery.trim()) return true;
+        const query = courseSearchQuery.toLowerCase().trim();
+        const name = (c.name || "").toLowerCase();
+        const title = (c.title || "").toLowerCase();
+        const code = (c.code || "").toLowerCase();
+        return name.includes(query) || title.includes(query) || code.includes(query);
+    });
 
     return (
         <motion.div
@@ -255,15 +265,48 @@ export function SourceRow({
                     >
                         <div data-testid="nested-courses-panel" className="border-l-4 border-[#7dd8cc] ml-6 mr-4 mb-4 rounded-xl bg-[#fafeff] overflow-hidden max-h-80 overflow-y-auto scrollbar-thin">
                             {/* Sub-header */}
-                            <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8f4f8]">
-                                <h3 className="text-sm font-bold text-[#1a5c55]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3 border-b border-[#e8f4f8]">
+                                <h3 className="text-sm font-bold text-[#1a5c55] shrink-0">
                                     Nested Courses
                                     {!isLoading && (
                                         <span className="ml-2 text-[11px] font-medium text-[#7aa5b0]">
-                                            ({activeCourses.length})
+                                            ({filteredCourses.length}{courseSearchQuery ? ` / ${activeCourses.length}` : ""})
                                         </span>
                                     )}
                                 </h3>
+
+                                {!isLoading && activeCourses.length > 0 && (
+                                    <div className="relative flex items-center min-w-0 w-full sm:w-auto">
+                                        <Search className="absolute left-2.5 text-[#7aa5b0]" sx={{ fontSize: 16 }} />
+                                        <input
+                                            type="text"
+                                            value={courseSearchQuery}
+                                            onChange={(e) => setCourseSearchQuery(e.target.value)}
+                                            placeholder="Search by course name..."
+                                            className="
+                                                w-full sm:w-56
+                                                pl-8 pr-7 py-1
+                                                text-xs text-[#1a2e35]
+                                                bg-[#f0f7fa]
+                                                border border-[#d6edf5]
+                                                rounded-lg
+                                                outline-none
+                                                focus:bg-white
+                                                focus:border-[#7dd8cc]
+                                                transition-all
+                                            "
+                                        />
+                                        {courseSearchQuery && (
+                                            <button
+                                                onClick={() => setCourseSearchQuery("")}
+                                                className="absolute right-2 text-[#7aa5b0] hover:text-[#1a2e35] text-xs font-bold px-1"
+                                                title="Clear search"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Loading spinner */}
@@ -280,6 +323,10 @@ export function SourceRow({
                                 <p className="text-sm text-[#7aa5b0] text-center py-8">
                                     No courses in this source.
                                 </p>
+                            ) : filteredCourses.length === 0 ? (
+                                <p className="text-sm text-[#7aa5b0] text-center py-8">
+                                    No courses matching &quot;{courseSearchQuery}&quot;
+                                </p>
                             ) : (
                                 <>
                                     {/* Column headings */}
@@ -292,14 +339,11 @@ export function SourceRow({
                                     </div>
 
                                     {/* Course rows */}
-                                    {activeCourses.map((course, ci) => (
-                                        <motion.div
+                                    {filteredCourses.map((course) => (
+                                        <div
                                             data-testid="course-row"
                                             key={course.id}
                                             className="grid grid-cols-[1fr_auto] sm:grid-cols-[120px_1fr_100px_1fr] gap-4 px-5 py-3 border-b border-[#f0f7fa] last:border-0 hover:bg-[#f0faf9] cursor-pointer transition-colors items-center group"
-                                            initial={{ opacity: 0, x: -6 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ duration: 0.2, delay: ci * 0.03 }}
                                             onClick={() => onSelectCourse(course)}
                                         >
                                             <span className="text-sm font-semibold text-[#1a5c55] truncate">
@@ -324,7 +368,7 @@ export function SourceRow({
                                                 sx={{ fontSize: 14 }}
                                                 className="sm:hidden text-[#c8e6ee] group-hover:text-[#7dd8cc] transition-colors shrink-0"
                                             />
-                                        </motion.div>
+                                        </div>
                                     ))}
                                 </>
                             )}

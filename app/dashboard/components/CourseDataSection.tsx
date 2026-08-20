@@ -303,12 +303,7 @@ export function CourseDataSection({
 
             {/* Course table */}
             {courses.length > 0 ? (
-                <motion.div
-                    className="dashboard-table-wrap"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
+                <div className="dashboard-table-wrap">
                     <table className="dashboard-table">
                         <thead>
                             <tr>
@@ -320,18 +315,10 @@ export function CourseDataSection({
                         </thead>
 
                         <tbody>
-                            {courses.map((course, index) => (
-                                <motion.tr
+                            {courses.map((course) => (
+                                <tr
                                     key={course.id ?? course.code}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{
-                                        duration: 0.2,
-                                        delay: index * 0.03,
-                                    }}
-                                    whileHover={{
-                                        backgroundColor: "rgba(0,0,0,0.02)",
-                                    }}
+                                    className="hover:bg-black/[0.02] transition-colors"
                                 >
                                     <td className="dashboard-table-name">
                                         {course.title ?? "-"}
@@ -348,11 +335,11 @@ export function CourseDataSection({
                                             : "-"}
                                         ......
                                     </td>
-                                </motion.tr>
+                                </tr>
                             ))}
                         </tbody>
                     </table>
-                </motion.div>
+                </div>
             ) : (
                 <motion.p
                     className="dashboard-table-empty"
