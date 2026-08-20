@@ -75,7 +75,7 @@ export const translations = {
     },
     // Source Management
     sourceManagement: {
-      pageTitle: "Data Sources",
+      pageTitle: "Source Management",
       pageSub: "Manage course catalogs, upload custom dataset files, and inspect stored courses.",
       totalSources: "Total Sources",
       defaultSource: "Default Source",
@@ -233,7 +233,7 @@ export const translations = {
     },
     // Source Management
     sourceManagement: {
-      pageTitle: "Tietolähteet",
+      pageTitle: "Lähdehallinta",
       pageSub: "Hallitse kurssiluetteloita, lataa omia aineistoja ja tarkastele tallennettuja kursseja.",
       totalSources: "Tietolähteitä yhteensä",
       defaultSource: "Oletuslähde",
