@@ -34,6 +34,8 @@ interface CourseDataSectionProps {
     programmes: string[];
     selectedProgramme: string | null;
     onSelectProgramme: (programme: string | null) => void;
+    selectedPeriod: string | null;
+    onSelectPeriod: (period: string | null) => void;
 }
 
 export function CourseDataSection({
@@ -46,8 +48,12 @@ export function CourseDataSection({
     programmes,
     selectedProgramme,
     onSelectProgramme,
+    selectedPeriod,
+    onSelectPeriod,
 }: CourseDataSectionProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
 
     /**
      * BEHAVIORAL MECHANISM:
@@ -198,51 +204,100 @@ export function CourseDataSection({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.25 }}
-                    className="mt-2 mb-1 flex flex-col gap-2 sm:flex-row sm:items-center"
+                    className="mt-2 mb-1 flex flex-col gap-3 sm:flex-row sm:items-center flex-wrap"
                 >
-                    <label htmlFor="programme-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
-                        Programme
-                    </label>
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="programme-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
+                            Programme
+                        </label>
 
-                    <motion.select
-                        id="programme-select"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.2 }}
-                        whileHover={{ scale: 1.03 }}
-                        whileFocus={{ scale: 1.03 }}
-                        value={selectedProgramme ?? ""}
-                        onChange={(e) =>
-                            onSelectProgramme(
-                                e.target.value === "" ? null : e.target.value
-                            )
-                        }
-                        className="
-                        w-full
-                        sm:w-auto
-                        sm:max-w-[220px]
-                        text-[12px]
-                        font-semibold
-                        text-[#1a5c55]
-                        bg-[#e8f4f8]
-                        border
-                        border-[#d6edf5]
-                        rounded-full
-                        px-3
-                        py-1.5
-                        outline-none
-                        cursor-pointer
-                        hover:bg-[#d6edf5]
-                        transition-colors
-                    "
-                    >
-                        <option value="">Choose your programme</option>
-                        {programmes.map((p) => (
-                            <option key={p} value={p}>
-                                {p}
-                            </option>
-                        ))}
-                    </motion.select>
+                        <motion.select
+                            id="programme-select"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            whileHover={{ scale: 1.03 }}
+                            whileFocus={{ scale: 1.03 }}
+                            value={selectedProgramme ?? ""}
+                            onChange={(e) =>
+                                onSelectProgramme(
+                                    e.target.value === "" ? null : e.target.value
+                                )
+                            }
+                            className="
+                            w-full
+                            sm:w-auto
+                            sm:max-w-[220px]
+                            text-[12px]
+                            font-semibold
+                            text-[#1a5c55]
+                            bg-[#e8f4f8]
+                            border
+                            border-[#d6edf5]
+                            rounded-full
+                            px-3
+                            py-1.5
+                            outline-none
+                            cursor-pointer
+                            hover:bg-[#d6edf5]
+                            transition-colors
+                        "
+                        >
+                            <option value="">Choose your programme</option>
+                            {programmes.map((p) => (
+                                <option key={p} value={p}>
+                                    {p}
+                                </option>
+                            ))}
+                        </motion.select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="period-select" className="text-[11px] font-semibold text-[#6b9daa] uppercase tracking-wide shrink-0">
+                            Period
+                        </label>
+
+                        <motion.select
+                            id="period-select"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            whileHover={{ scale: 1.03 }}
+                            whileFocus={{ scale: 1.03 }}
+                            value={selectedPeriod ?? ""}
+                            onChange={(e) =>
+                                onSelectPeriod(
+                                    e.target.value === "" ? null : e.target.value
+                                )
+                            }
+                            className="
+                            w-full
+                            sm:w-auto
+                            sm:max-w-[260px]
+                            text-[12px]
+                            font-semibold
+                            text-[#1a5c55]
+                            bg-[#e8f4f8]
+                            border
+                            border-[#d6edf5]
+                            rounded-full
+                            px-3
+                            py-1.5
+                            outline-none
+                            cursor-pointer
+                            hover:bg-[#d6edf5]
+                            transition-colors
+                        "
+                        >
+                            <option value="">Choose your period</option>
+                            <option value="1">1. period: weeks 34–43 (18.8.–26.10.{currentYear})</option>
+                            <option value="2">2. period: weeks 44–52 (27.10.–31.12.{currentYear})</option>
+                            <option value="3">3. period: weeks 1–10 (1.1.–8.3.{nextYear})</option>
+                            <option value="4">4. period: weeks 11–18 (9.3.–3.5.{nextYear})</option>
+                            <option value="5">5. period: weeks 19–31 (4.5.–31.7.{nextYear})</option>
+                            <option value="all">All periods</option>
+                        </motion.select>
+                    </div>
                 </motion.div>
             )}
 

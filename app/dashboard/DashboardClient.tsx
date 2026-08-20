@@ -49,7 +49,28 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const coursesSectionRef = useRef<HTMLDivElement>(null);
     const [programmes, setProgrammes] = useState<string[]>([]);
     const [selectedProgramme, setSelectedProgramme] = useState<string | null>(null);
+    const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
     const uploadProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const getPeriodDates = (periodKey: string | null): { start_date: string | null; end_date: string | null } => {
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        switch (periodKey) {
+            case "1":
+                return { start_date: `${currentYear}-08-18`, end_date: `${currentYear}-10-26` };
+            case "2":
+                return { start_date: `${currentYear}-10-27`, end_date: `${currentYear}-12-31` };
+            case "3":
+                return { start_date: `${nextYear}-01-01`, end_date: `${nextYear}-03-08` };
+            case "4":
+                return { start_date: `${nextYear}-03-09`, end_date: `${nextYear}-05-03` };
+            case "5":
+                return { start_date: `${nextYear}-05-04`, end_date: `${nextYear}-07-31` };
+            case "all":
+            default:
+                return { start_date: null, end_date: null };
+        }
+    };
 
     // Scroll to results section on new result stream start
     useEffect(() => {
@@ -97,6 +118,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
         setSelectedSourceId(sourceId);
         setAgentResult(null);
         setSelectedProgramme(null); // reset filter khi đổi source
+        setSelectedPeriod(null); // reset period filter khi đổi source
 
         // Step 0 → 1 %: open overlay
         setIsOpenLoader({ isOpen: true, title: "Saving your search...", progress: 1 });
@@ -167,6 +189,7 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
 
                 setSelectedSourceId(result.source_id);
                 setSelectedProgramme(null);
+                setSelectedPeriod(null);
 
                 const newCourses = await getCoursesBySourceId(result.source_id);
                 if (newCourses.error) throw new Error(newCourses.error);
@@ -278,7 +301,11 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
     const onAnalyze = async (form: JobForm): Promise<void> => {
         if (!selectedSourceId) return;
         if (!selectedProgramme) {
-            showNotification('Please choose your programme')
+            showNotification('Please choose your programme');
+            return;
+        }
+        if (!selectedPeriod) {
+            showNotification('Please choose your period');
             return;
         }
         setIsAnalyzing(true);
@@ -294,6 +321,8 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             programme: selectedProgramme
         };
 
+        const { start_date, end_date } = getPeriodDates(selectedPeriod);
+
         try {
             await analyzeJobDescriptionStreamingAxios(
                 {
@@ -301,8 +330,9 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     position: form.position,
                     source_id: selectedSourceId,
                     company_name: form.company_name,
-                    programme: selectedProgramme!,   // <-- thêm dòng này
-
+                    programme: selectedProgramme!,
+                    start_date,
+                    end_date,
                 },
                 (type, data) => {
                     // console.log(type, data)
@@ -388,6 +418,8 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     programmes={programmes}
                     selectedProgramme={selectedProgramme}
                     onSelectProgramme={handleSelectProgramme}
+                    selectedPeriod={selectedPeriod}
+                    onSelectPeriod={setSelectedPeriod}
                 />
 
                 {/* RIGHT: Target Job */}
@@ -397,6 +429,8 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     errors={errors}
                     isAnalyzing={isAnalyzing}
                     selectedSourceId={selectedSourceId}
+                    selectedProgramme={selectedProgramme}
+                    selectedPeriod={selectedPeriod}
                     onAnalyze={onAnalyze}
                 />
             </div>

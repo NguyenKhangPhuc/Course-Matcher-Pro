@@ -6,7 +6,9 @@ export interface ChatRequest {
     source_id: string;
     position: string;
     company_name?: string;
-    programme: string
+    programme: string;
+    start_date?: string | null;
+    end_date?: string | null;
 }
 
 export const analyzeJobDescriptionStreamingAxios = async (

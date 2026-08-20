@@ -34,6 +34,8 @@ interface TargetJobFormProps {
     errors: FieldErrors<JobForm>;
     isAnalyzing: boolean;
     selectedSourceId: string | null;
+    selectedProgramme: string | null;
+    selectedPeriod: string | null;
     onAnalyze: (form: JobForm) => Promise<void>;
 }
 
@@ -43,6 +45,8 @@ export function TargetJobForm({
     errors,
     isAnalyzing,
     selectedSourceId,
+    selectedProgramme,
+    selectedPeriod,
     onAnalyze,
 }: TargetJobFormProps) {
     /**
@@ -201,15 +205,15 @@ export function TargetJobForm({
                 {/* Analyze button */}
                 <motion.button
                     type="submit"
-                    disabled={!selectedSourceId || isAnalyzing}
+                    disabled={!selectedSourceId || !selectedProgramme || !selectedPeriod || isAnalyzing}
                     className="dashboard-analyze-btn"
                     whileHover={
-                        !isAnalyzing && selectedSourceId
+                        !isAnalyzing && selectedSourceId && selectedProgramme && selectedPeriod
                             ? { scale: 1.03 }
                             : {}
                     }
                     whileTap={
-                        !isAnalyzing && selectedSourceId
+                        !isAnalyzing && selectedSourceId && selectedProgramme && selectedPeriod
                             ? { scale: 0.97 }
                             : {}
                     }
