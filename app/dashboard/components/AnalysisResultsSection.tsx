@@ -96,7 +96,7 @@ export function AnalysisResultsSection({
                                 >
                                     {agentResult.technical_requirements}
                                 </motion.p>
-                            ) : (
+                            ) : isAnalyzing ? (
                                 <motion.div
                                     key="req-loader"
                                     initial={{ opacity: 0 }}
@@ -108,6 +108,15 @@ export function AnalysisResultsSection({
                                         label="Extracting technical requirements..."
                                     />
                                 </motion.div>
+                            ) : (
+                                <motion.p
+                                    key="req-empty"
+                                    className="dashboard-requirements-text italic text-gray-500 text-xs"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                >
+                                    No specific technical requirements identified.
+                                </motion.p>
                             )}
                         </AnimatePresence>
                     </div>

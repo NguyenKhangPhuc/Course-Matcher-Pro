@@ -57,15 +57,15 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
         const nextYear = currentYear + 1;
         switch (periodKey) {
             case "1":
-                return { start_date: `${currentYear}-08-18`, end_date: `${currentYear}-10-26` };
+                return { start_date: `${currentYear}-08-08`, end_date: `${currentYear}-11-05` };
             case "2":
-                return { start_date: `${currentYear}-10-27`, end_date: `${currentYear}-12-31` };
+                return { start_date: `${currentYear}-10-17`, end_date: `${nextYear}-01-10` };
             case "3":
-                return { start_date: `${nextYear}-01-01`, end_date: `${nextYear}-03-08` };
+                return { start_date: `${currentYear}-12-22`, end_date: `${nextYear}-03-18` };
             case "4":
-                return { start_date: `${nextYear}-03-09`, end_date: `${nextYear}-05-03` };
+                return { start_date: `${nextYear}-02-27`, end_date: `${nextYear}-05-13` };
             case "5":
-                return { start_date: `${nextYear}-05-04`, end_date: `${nextYear}-07-31` };
+                return { start_date: `${nextYear}-04-24`, end_date: `${nextYear}-08-10` };
             case "all":
             default:
                 return { start_date: null, end_date: null };
@@ -335,34 +335,59 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
                     end_date,
                 },
                 (type, data) => {
-                    // console.log(type, data)
-                    if (type === "requirements") {
-                        localAgentResult.technical_requirements = data as string;
-                        setAgentResult({ ...localAgentResult });
-                    } else if (type === "course") {
+                    const normalizedType = (type || "").toLowerCase().trim();
+
+                    const isReq = [
+                        "requirements",
+                        "requirement",
+                        "technical_requirements",
+                        "technical_requirement",
+                        "skills",
+                        "skill",
+                    ].includes(normalizedType);
+
+                    const isCourse = ["course", "courses", "matched_course", "matched_courses"].includes(normalizedType);
+                    const isDone = ["done", "complete", "completed", "end", "finished", "finish"].includes(normalizedType);
+                    const isError = ["error", "err", "failed", "failure"].includes(normalizedType);
+
+                    if (isReq) {
+                        let extractedText = "";
+                        if (typeof data === "string") {
+                            extractedText = data;
+                        } else if (data && typeof data === "object") {
+                            extractedText =
+                                (data as any).technical_requirements ||
+                                (data as any).requirements ||
+                                (data as any).text ||
+                                (data as any).data ||
+                                (data as any).content ||
+                                JSON.stringify(data);
+                        }
+
+                        if (extractedText) {
+                            localAgentResult.technical_requirements = extractedText;
+                            setAgentResult({ ...localAgentResult });
+                        }
+                    } else if (isCourse) {
                         localAgentResult.courses.push(data as CourseAgentResponse);
                         setAgentResult({ ...localAgentResult });
-                    } else if (type === "done") {
+                    } else if (isDone) {
                         const chunk = data as DoneResponse;
-                        setIsAnalyzing(false);
-                        showNotification(chunk.summary);
+                        const summary =
+                            typeof data === "string"
+                                ? data
+                                : chunk?.summary || "AI matching has successfully analyzed the description.";
+                        showNotification(summary);
                         setTimeout(() => {
                             setShowSaveModal(true);
                         }, 5000);
-                    } else if (type === "error") {
+                    } else if (isError) {
                         const chunk = data as ErrorChunk;
-                        console.log(chunk)
-                        setIsAnalyzing(false);
-                        // console.log(chunk)
-                        // Fix: Gọi thẳng notification ở đây thay vì throw lỗi vô định
                         showNotification(chunk || "Analysis failed.");
-                        // console.error("Stream Error:", chunk.data);
-                        return;
                     }
                 }
             );
         } catch (err) {
-            setIsAnalyzing(false);
             console.log(err);
             let errorMessage = "Analysis failed.";
 
@@ -385,6 +410,8 @@ export default function DashboardClient({ user, initialSources }: { user: User; 
             }
 
             showNotification(errorMessage);
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
